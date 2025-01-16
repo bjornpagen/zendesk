@@ -27,7 +27,7 @@
 			"correctness": {
 				"noUnusedImports": {
 					"level": "error",
-					"fix": "unsafe"
+					"fix": "safe"
 				}
 			},
 			"nursery": {
@@ -37,7 +37,7 @@
 			"style": {
 				"useBlockStatements": {
 					"level": "error",
-					"fix": "unsafe"
+					"fix": "safe"
 				}
 			}
 		}
