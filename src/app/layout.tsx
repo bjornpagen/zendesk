@@ -1,5 +1,11 @@
 import "@/styles/globals.css"
-import { ClerkProvider, SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs"
+import {
+	ClerkProvider,
+	SignedIn,
+	SignedOut,
+	SignInButton,
+	UserButton
+} from "@clerk/nextjs"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
@@ -8,7 +14,9 @@ export const metadata: Metadata = {
 	icons: [{ rel: "icon", url: "/favicon.ico" }]
 }
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({
+	children
+}: Readonly<{ children: React.ReactNode }>) {
 	return (
 		<ClerkProvider>
 			<html lang="en">

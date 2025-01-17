@@ -9,7 +9,9 @@ type ConvertKeysToSnakeCase<T> = T extends object
 			// biome-ignore lint/complexity/noBannedTypes: Function type is required for type manipulation
 			[K in keyof T as T[K] extends Function
 				? never
-				: CamelToSnakeCase<string & K>]: T[K] extends object ? ConvertKeysToSnakeCase<T[K]> : T[K]
+				: CamelToSnakeCase<string & K>]: T[K] extends object
+				? ConvertKeysToSnakeCase<T[K]>
+				: T[K]
 		}
 	: T
 
