@@ -15,7 +15,7 @@ type ConvertKeysToSnakeCase<T> = T extends object
 		}
 	: T
 
-export type SupabaseInsertWebhookPayload<T> = {
+export type InsertPayload<T> = {
 	type: "INSERT"
 	table: string
 	schema: string
@@ -23,7 +23,7 @@ export type SupabaseInsertWebhookPayload<T> = {
 	old_record: null
 }
 
-export type SupabaseUpdateWebhookPayload<T> = {
+export type UpdatePayload<T> = {
 	type: "UPDATE"
 	table: string
 	schema: string
@@ -31,7 +31,7 @@ export type SupabaseUpdateWebhookPayload<T> = {
 	old_record: ConvertKeysToSnakeCase<T>
 }
 
-export type SupabaseDeleteWebhookPayload<T> = {
+export type DeletePayload<T> = {
 	type: "DELETE"
 	table: string
 	schema: string
@@ -39,7 +39,4 @@ export type SupabaseDeleteWebhookPayload<T> = {
 	old_record: ConvertKeysToSnakeCase<T>
 }
 
-export type SupabaseWebhookPayload<T> =
-	| SupabaseInsertWebhookPayload<T>
-	| SupabaseUpdateWebhookPayload<T>
-	| SupabaseDeleteWebhookPayload<T>
+export type Payload<T> = InsertPayload<T> | UpdatePayload<T> | DeletePayload<T>
