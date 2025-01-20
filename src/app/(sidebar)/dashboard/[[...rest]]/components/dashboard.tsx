@@ -92,7 +92,8 @@ export default function Dashboard() {
 				{filteredThreads.map((thread) => (
 					<Link
 						href={`/dashboard/thread/${thread.id}?message=${
-							thread.messages[thread.messages.length - 1].id
+							// biome-ignore lint/style/noNonNullAssertion: Thread messages array is guaranteed to have at least one message
+							thread.messages[thread.messages.length - 1]!.id
 						}`}
 						key={thread.id}
 					>
@@ -102,12 +103,18 @@ export default function Dashboard() {
 									<p className="text-sm font-medium">{thread.customerName}</p>
 									<p className="text-xs text-muted-foreground">
 										{formatDate(
-											thread.messages[thread.messages.length - 1].createdAt
+											// biome-ignore lint/style/noNonNullAssertion: Thread messages array is guaranteed to have at least one message
+											thread.messages[thread.messages.length - 1]!.createdAt
 										)}
 									</p>
 								</div>
 								<div className="text-sm" aria-label={thread.subject}>
-									<p>{thread.messages[thread.messages.length - 1].body}</p>
+									<p>
+										{
+											// biome-ignore lint/style/noNonNullAssertion: Thread messages array is guaranteed to have at least one message
+											thread.messages[thread.messages.length - 1]!.body
+										}
+									</p>
 								</div>
 							</CardContent>
 						</Card>

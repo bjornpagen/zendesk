@@ -1,28 +1,22 @@
-import { useMemo, useCallback, useEffect } from "react"
+import { useMemo, useCallback } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { mockTeamMembers } from "@/types/frontend"
-
-interface Filters {
-	teams: string[]
-	intext: string
-}
 
 export function useTeamFilters() {
 	const router = useRouter()
 	const searchParams = useSearchParams()
 
+	// Pull values from the search params
 	const isOpen = searchParams.get("command") === "open"
-	const selectedTeams = searchParams.get("team")?.split(",") || []
 	const intextSearch = searchParams.get("q") || ""
 
+	// Update the URL with the new parameters
 	const updateSearchParams = useCallback(
-		(newParams: { [key: string]: string | string[] | undefined }) => {
+		(newParams: { [key: string]: string | undefined }) => {
 			const params = new URLSearchParams(searchParams.toString())
 			for (const [key, value] of Object.entries(newParams)) {
 				if (value === undefined) {
 					params.delete(key)
-				} else if (Array.isArray(value)) {
-					params.set(key, value.join(","))
 				} else {
 					params.set(key, value)
 				}
@@ -32,6 +26,7 @@ export function useTeamFilters() {
 		[router, searchParams]
 	)
 
+	// Toggling open/closed for the command overlay
 	const handleOpenChange = useCallback(
 		(open: boolean) => {
 			updateSearchParams({ command: open ? "open" : undefined })
@@ -39,45 +34,22 @@ export function useTeamFilters() {
 		[updateSearchParams]
 	)
 
+	// Compute the filtered team members list
 	const filteredTeamMembers = useMemo(() => {
 		return mockTeamMembers.filter((member) => {
-			const matchesTeam =
-				selectedTeams.length === 0 || selectedTeams.includes(member.team)
 			const intextLower = intextSearch.toLowerCase()
-			const matchesIntext =
+			return (
 				!intextSearch ||
 				member.name.toLowerCase().includes(intextLower) ||
 				member.email.toLowerCase().includes(intextLower)
-
-			return matchesTeam && matchesIntext
+			)
 		})
-	}, [selectedTeams, intextSearch])
+	}, [intextSearch])
 
-	useEffect(() => {
-		const down = (e: KeyboardEvent) => {
-			if (e.key === "j" && (e.metaKey || e.ctrlKey)) {
-				e.preventDefault()
-				handleOpenChange(!isOpen)
-			}
-		}
-		document.addEventListener("keydown", down)
-		return () => document.removeEventListener("keydown", down)
-	}, [isOpen, handleOpenChange])
-
-	useEffect(() => {
-		const handleEscape = (e: KeyboardEvent) => {
-			if (e.key === "Escape" && isOpen) {
-				handleOpenChange(false)
-			}
-		}
-		document.addEventListener("keydown", handleEscape)
-		return () => document.removeEventListener("keydown", handleEscape)
-	}, [isOpen, handleOpenChange])
-
+	// Handler function to update search in the URL
 	const onFiltersChange = useCallback(
-		(filters: Filters) => {
+		(filters: { intext: string }) => {
 			updateSearchParams({
-				team: filters.teams.length > 0 ? filters.teams : undefined,
 				q: filters.intext || undefined
 			})
 		},
@@ -86,7 +58,6 @@ export function useTeamFilters() {
 
 	return {
 		isOpen,
-		selectedTeams,
 		intextSearch,
 		filteredTeamMembers,
 		handleOpenChange,

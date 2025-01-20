@@ -25,6 +25,12 @@ export interface TeamMember {
 	team: string
 }
 
+export interface TeamMemberUpdate {
+	memberId: string
+	teamId: string
+	action: "add" | "remove"
+}
+
 function generateRandomDate(start: Date, end: Date) {
 	return new Date(
 		start.getTime() + Math.random() * (end.getTime() - start.getTime())

@@ -38,6 +38,9 @@
 					"level": "error",
 					"fix": "safe"
 				}
+			},
+			"a11y": {
+				"useKeyWithClickEvents": "off"
 			}
 		}
 	},

@@ -56,8 +56,8 @@ export default function TodoPage() {
 	return (
 		<div className="space-y-4">
 			<h1 className="text-2xl font-bold mb-6">Project Requirements Todo</h1>
-			{todos.map((todo, index) => (
-				<Card key={index}>
+			{todos.map((todo) => (
+				<Card key={todo.title}>
 					<CardHeader>
 						<CardTitle className="flex items-center justify-between">
 							<span>{todo.title}</span>
