@@ -109,6 +109,10 @@ export default function Team() {
 							selectedTeams={selectedTeams}
 							intextSearch={intextSearch}
 							onFiltersChange={onFiltersChange}
+							onClose={() => handleOpenChange(false)}
+							onMemberUpdate={(memberId, teamId, action) =>
+								console.log({ memberId, teamId, action })
+							}
 						/>
 					</div>
 				</div>

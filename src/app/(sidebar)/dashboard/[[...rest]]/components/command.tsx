@@ -232,7 +232,7 @@ export function DashboardCommand({
 				onValueChange={setSearchText}
 			/>
 			<CommandList>
-				<CommandGroup heading="Status" className="p-2">
+				<CommandGroup heading="Filter Status" className="p-2">
 					<CommandItem onSelect={() => toggleStatus("open")}>
 						<Mail className="mr-2 h-4 w-4" />
 						<span>Open</span>
@@ -250,7 +250,7 @@ export function DashboardCommand({
 					</CommandItem>
 				</CommandGroup>
 				<CommandSeparator />
-				<CommandGroup heading="Visibility" className="p-2">
+				<CommandGroup heading="Filter Visibility" className="p-2">
 					<CommandItem onSelect={() => toggleVisibility("read")}>
 						<Eye className="mr-2 h-4 w-4" />
 						<span>Read</span>
@@ -263,7 +263,7 @@ export function DashboardCommand({
 					</CommandItem>
 				</CommandGroup>
 				<CommandSeparator />
-				<CommandGroup heading="Problems" className="p-2">
+				<CommandGroup heading="Filter Problems" className="p-2">
 					{mockProblems.map((problem) => (
 						<CommandItem
 							key={problem.slug}
@@ -276,7 +276,7 @@ export function DashboardCommand({
 					))}
 				</CommandGroup>
 				<CommandSeparator />
-				<CommandGroup heading="Priority" className="p-2">
+				<CommandGroup heading="Filter Priority" className="p-2">
 					<CommandItem onSelect={() => togglePriority("urgent")}>
 						<AlertCircle className="mr-2 h-4 w-4" />
 						<span>Urgent</span>

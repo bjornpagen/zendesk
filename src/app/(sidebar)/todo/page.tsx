@@ -19,21 +19,9 @@ interface Todo {
 export default function TodoPage() {
 	const todos = [
 		{
-			title: "Admin/Settings Screen",
-			description:
-				"Create basic settings page for team management, roles, and schedules",
-			priority: "high"
-		},
-		{
 			title: "Analytics Dashboard",
 			description:
 				"Add simple metrics page showing response times and ticket statistics",
-			priority: "medium"
-		},
-		{
-			title: "Knowledge Base",
-			description:
-				"Create basic article listing and placeholder for FAQ system",
 			priority: "medium"
 		},
 		{
@@ -49,6 +37,12 @@ export default function TodoPage() {
 		{
 			title: "Notifications Panel",
 			description: "Implement basic notification system for updates",
+			priority: "low"
+		},
+		{
+			title: "Knowledge Base",
+			description:
+				"Create basic article listing and placeholder for FAQ system",
 			priority: "low"
 		},
 		{
