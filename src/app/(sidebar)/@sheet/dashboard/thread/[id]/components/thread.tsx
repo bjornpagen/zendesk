@@ -15,7 +15,8 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Paperclip, ArrowUp } from "lucide-react"
-import { ChangeThreadPropertyDialog } from "@/components/change-thread-property-dialog"
+
+import { ChangeThreadPropertyDialog } from "./change-thread-property-dialog"
 import { formatDate } from "@/lib/format"
 
 const getStatusVariant = (status: string) => {

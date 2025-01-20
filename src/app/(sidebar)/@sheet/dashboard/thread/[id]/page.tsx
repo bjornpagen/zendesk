@@ -1,4 +1,4 @@
-import Thread from "@/components/thread"
+import Thread from "./components/thread"
 
 export default function ThreadPage() {
 	return <Thread />

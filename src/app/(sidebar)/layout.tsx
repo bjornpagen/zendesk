@@ -1,5 +1,5 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
-import { Sidebar } from "@/components/sidebar"
+import { Sidebar } from "./components/sidebar"
 
 export default function Layout({
 	children,

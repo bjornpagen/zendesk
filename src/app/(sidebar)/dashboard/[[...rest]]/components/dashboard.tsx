@@ -5,10 +5,12 @@ import Masonry from "react-masonry-css"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Search } from "lucide-react"
-import { DashboardSelectedFilters } from "@/components/dashboard-selected-filters"
 import { formatDate } from "@/lib/format"
 import { useThreadFilters } from "@/hooks/use-thread-filters"
 import { MASONRY_BREAKPOINTS } from "@/lib/constants"
+
+import { DashboardCommand } from "./command"
+import { DashboardSelectedFilters } from "./selected-filters"
 
 export default function Dashboard() {
 	const {
@@ -119,7 +121,7 @@ export default function Dashboard() {
 					onClick={() => handleOpenChange(false)}
 				>
 					<div onClick={(e) => e.stopPropagation()}>
-						<AppCommand
+						<DashboardCommand
 							selectedStatuses={selectedStatuses}
 							selectedProblems={selectedProblems}
 							selectedPriorities={selectedPriorities}

@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users } from "lucide-react"
+import { LayoutDashboard, ListTodo, Users } from "lucide-react"
 
 import {
 	Sidebar as ShadcnSidebar,
@@ -22,6 +22,11 @@ const items = [
 		title: "Team",
 		url: "/team",
 		icon: Users
+	},
+	{
+		title: "Todo",
+		url: "/todo",
+		icon: ListTodo
 	}
 ]
 

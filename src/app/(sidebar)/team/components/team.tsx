@@ -8,8 +8,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { formatDate } from "@/lib/format"
 import { MASONRY_BREAKPOINTS } from "@/lib/constants"
 import { useTeamFilters } from "@/hooks/use-team-filters"
-import { TeamCommand } from "@/components/team-command"
-import { TeamSelectedFilters } from "@/components/team-selected-filters"
+
+import { TeamCommand } from "./command"
+import { TeamSelectedFilters } from "./selected-filters"
 
 export default function Team() {
 	const {
