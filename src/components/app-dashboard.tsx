@@ -1,130 +1,28 @@
 "use client"
 
-import { useMemo, useEffect, useCallback } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import Masonry from "react-masonry-css"
-import { mockThreads } from "@/types/frontend"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Search } from "lucide-react"
 import { AppCommand } from "@/components/command"
 import { SelectedFilters } from "@/components/selected-filters"
 import { formatDate } from "@/lib/format"
+import { useThreadFilters } from "@/hooks/use-thread-filters"
 
 export default function ZendeskDashboard() {
-	const router = useRouter()
-	const searchParams = useSearchParams()
-
-	const isOpen = searchParams.get("command") === "open"
-	const selectedStatuses = searchParams.get("status")?.split(",") || []
-	const selectedProblems = searchParams.get("problem")?.split(",") || []
-	const selectedPriorities = searchParams.get("priority")?.split(",") || []
-	const selectedVisibility = searchParams.get("visibility")?.split(",") || []
-	const intextSearch = searchParams.get("q") || ""
-
-	const updateSearchParams = useCallback(
-		(newParams: { [key: string]: string | string[] | null }) => {
-			const params = new URLSearchParams(searchParams.toString())
-			for (const [key, value] of Object.entries(newParams)) {
-				if (value === null) {
-					params.delete(key)
-				} else if (Array.isArray(value)) {
-					params.set(key, value.join(","))
-				} else {
-					params.set(key, value)
-				}
-			}
-			router.replace(`/dashboard?${params.toString()}`)
-		},
-		[router, searchParams]
-	)
-
-	const handleOpenChange = useCallback(
-		(open: boolean) => {
-			updateSearchParams({ command: open ? "open" : null })
-		},
-		[updateSearchParams]
-	)
-
-	const filteredThreads = useMemo(() => {
-		return mockThreads.filter((thread) => {
-			const matchesStatus =
-				selectedStatuses.length === 0 ||
-				selectedStatuses.includes(thread.status)
-			const matchesProblem =
-				selectedProblems.length === 0 ||
-				selectedProblems.includes(thread.problem)
-			const matchesPriority =
-				selectedPriorities.length === 0 ||
-				selectedPriorities.includes(thread.priority)
-			const matchesVisibility =
-				selectedVisibility.length === 0 ||
-				(selectedVisibility.includes("read") && thread.isRead) ||
-				(selectedVisibility.includes("unread") && !thread.isRead)
-			const matchesIntext =
-				!intextSearch ||
-				thread.subject.toLowerCase().includes(intextSearch.toLowerCase()) ||
-				thread.messages.some((message) =>
-					message.body.toLowerCase().includes(intextSearch.toLowerCase())
-				)
-			return (
-				matchesStatus &&
-				matchesProblem &&
-				matchesPriority &&
-				matchesVisibility &&
-				matchesIntext
-			)
-		})
-	}, [
+	const {
+		isOpen,
 		selectedStatuses,
 		selectedProblems,
 		selectedPriorities,
 		selectedVisibility,
-		intextSearch
-	])
-
-	useEffect(() => {
-		const down = (e: KeyboardEvent) => {
-			if (e.key === "j" && (e.metaKey || e.ctrlKey)) {
-				e.preventDefault()
-				handleOpenChange(!isOpen)
-			}
-		}
-
-		document.addEventListener("keydown", down)
-		return () => document.removeEventListener("keydown", down)
-	}, [isOpen, handleOpenChange])
-
-	useEffect(() => {
-		const handleEscape = (e: KeyboardEvent) => {
-			if (e.key === "Escape" && isOpen) {
-				handleOpenChange(false)
-			}
-		}
-
-		document.addEventListener("keydown", handleEscape)
-		return () => document.removeEventListener("keydown", handleEscape)
-	}, [isOpen, handleOpenChange])
-
-	const onFiltersChange = useCallback(
-		(filters: {
-			statuses: string[]
-			problems: string[]
-			priorities: string[]
-			visibility: string[]
-			intext: string
-		}) => {
-			updateSearchParams({
-				status: filters.statuses.length > 0 ? filters.statuses : null,
-				problem: filters.problems.length > 0 ? filters.problems : null,
-				priority: filters.priorities.length > 0 ? filters.priorities : null,
-				visibility: filters.visibility.length > 0 ? filters.visibility : null,
-				q: filters.intext || null
-			})
-		},
-		[updateSearchParams]
-	)
+		intextSearch,
+		filteredThreads,
+		handleOpenChange,
+		onFiltersChange,
+		updateSearchParams
+	} = useThreadFilters()
 
 	const breakpointColumnsObj = {
 		default: 6,
@@ -156,6 +54,7 @@ export default function ZendeskDashboard() {
 						</p>
 					</div>
 				</div>
+
 				<SelectedFilters
 					statuses={selectedStatuses}
 					problems={selectedProblems}
@@ -166,30 +65,33 @@ export default function ZendeskDashboard() {
 						if (type === "status") {
 							updateSearchParams({
 								status:
-									selectedStatuses.filter((s) => s !== value).join(",") || null
+									selectedStatuses.filter((s) => s !== value).join(",") ||
+									undefined
 							})
 						} else if (type === "problem") {
 							updateSearchParams({
 								problem:
-									selectedProblems.filter((p) => p !== value).join(",") || null
+									selectedProblems.filter((p) => p !== value).join(",") ||
+									undefined
 							})
 						} else if (type === "priority") {
 							updateSearchParams({
 								priority:
 									selectedPriorities.filter((p) => p !== value).join(",") ||
-									null
+									undefined
 							})
 						} else if (type === "visibility") {
 							updateSearchParams({
 								visibility:
 									selectedVisibility.filter((v) => v !== value).join(",") ||
-									null
+									undefined
 							})
 						} else if (type === "intext") {
-							updateSearchParams({ q: null })
+							updateSearchParams({ q: undefined })
 						}
 					}}
 				/>
+
 				<Masonry
 					breakpointCols={breakpointColumnsObj}
 					className="flex w-auto -ml-4"
@@ -197,7 +99,9 @@ export default function ZendeskDashboard() {
 				>
 					{filteredThreads.map((thread) => (
 						<Link
-							href={`/dashboard/thread/${thread.id}?message=${thread.messages[thread.messages.length - 1].id}`}
+							href={`/dashboard/thread/${thread.id}?message=${
+								thread.messages[thread.messages.length - 1].id
+							}`}
 							key={thread.id}
 						>
 							<Card className="mb-4 cursor-pointer hover:shadow-md transition-shadow">
