@@ -9,10 +9,9 @@ import { formatDate } from "@/lib/format"
 import { useThreadFilters } from "@/hooks/use-thread-filters"
 import { MASONRY_BREAKPOINTS } from "@/lib/constants"
 
-import { DashboardCommand } from "./command"
-import { DashboardSelectedFilters } from "./selected-filters"
-
-export default function Dashboard() {
+import { MessagesCommand } from "./command"
+import { MessagesSelectedFilters } from "./selected-filters"
+export default function Messages() {
 	const {
 		isOpen,
 		selectedStatuses,
@@ -47,7 +46,7 @@ export default function Dashboard() {
 				</div>
 			</div>
 
-			<DashboardSelectedFilters
+			<MessagesSelectedFilters
 				statuses={selectedStatuses}
 				problems={selectedProblems}
 				priorities={selectedPriorities}
@@ -91,7 +90,7 @@ export default function Dashboard() {
 			>
 				{filteredThreads.map((thread) => (
 					<Link
-						href={`/dashboard/thread/${thread.id}?message=${
+						href={`/messages/thread/${thread.id}?message=${
 							// biome-ignore lint/style/noNonNullAssertion: Thread messages array is guaranteed to have at least one message
 							thread.messages[thread.messages.length - 1]!.id
 						}`}
@@ -128,7 +127,7 @@ export default function Dashboard() {
 					onClick={() => handleOpenChange(false)}
 				>
 					<div onClick={(e) => e.stopPropagation()}>
-						<DashboardCommand
+						<MessagesCommand
 							selectedStatuses={selectedStatuses}
 							selectedProblems={selectedProblems}
 							selectedPriorities={selectedPriorities}

@@ -35,7 +35,7 @@ export function useThreadFilters() {
 					params.set(key, value)
 				}
 			}
-			router.replace(`/dashboard?${params.toString()}`)
+			router.replace(`/messages?${params.toString()}`)
 		},
 		[router, searchParams]
 	)

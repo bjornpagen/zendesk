@@ -10,11 +10,12 @@ import { MASONRY_BREAKPOINTS } from "@/lib/constants"
 import { useTeamFilters } from "@/hooks/use-team-filters"
 import { useMemo, useState } from "react"
 import type { TeamMemberUpdate } from "@/types/frontend"
-import { TeamSelectedFilters } from "./selected-filters"
-import { GroupAction } from "./team-action"
-import { TeamCommand } from "./command"
+import { TeamsSelectedFilters } from "./selected-filters"
 
-export default function Team() {
+import { TeamsAction } from "./team-action"
+import { TeamsCommand } from "./command"
+
+export default function Teams() {
 	const {
 		isOpen,
 		intextSearch,
@@ -82,9 +83,9 @@ export default function Team() {
 				</div>
 			</div>
 
-			<TeamSelectedFilters
+			<TeamsSelectedFilters
 				intext={intextSearch}
-				onFilterRemove={(type, value) => {
+				onFilterRemove={(type) => {
 					if (type === "intext") {
 						updateSearchParams({ q: undefined })
 					}
@@ -93,7 +94,7 @@ export default function Team() {
 
 			<div className="space-y-8">
 				{Object.entries(groupedMembers).map(([team, members]) => (
-					<div key={team} className="space-y-6 px-0 pb-6 rounded-lg">
+					<div key={team} className="space-y-6 px-0 rounded-lg">
 						<div className="flex justify-between items-center mb-4">
 							<div>
 								<h2 className="text-xl font-semibold text-gray-800 inline-block font-display">
@@ -183,7 +184,7 @@ export default function Team() {
 					onClick={handleClose}
 				>
 					<div onClick={(e) => e.stopPropagation()}>
-						<TeamCommand
+						<TeamsCommand
 							intextSearch={intextSearch}
 							onFiltersChange={onFiltersChange}
 							onClose={handleClose}
@@ -198,7 +199,7 @@ export default function Team() {
 					onClick={handleClose}
 				>
 					<div onClick={(e) => e.stopPropagation()}>
-						<GroupAction
+						<TeamsAction
 							teamId={selectedTeam}
 							mode={selectedAction}
 							onMemberUpdate={(memberId, teamId, action) =>

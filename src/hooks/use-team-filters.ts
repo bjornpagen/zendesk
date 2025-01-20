@@ -21,7 +21,7 @@ export function useTeamFilters() {
 					params.set(key, value)
 				}
 			}
-			router.replace(`/team?${params.toString()}`)
+			router.replace(`/teams?${params.toString()}`)
 		},
 		[router, searchParams]
 	)

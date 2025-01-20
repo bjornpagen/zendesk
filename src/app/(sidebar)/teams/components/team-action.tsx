@@ -23,7 +23,7 @@ interface GroupActionProps {
 	onClose?: () => void
 }
 
-export function GroupAction({
+export function TeamsAction({
 	teamId,
 	mode,
 	onMemberUpdate,

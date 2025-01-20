@@ -19,36 +19,20 @@ interface Todo {
 export default function TodoPage() {
 	const todos = [
 		{
+			title: "Customer Support Widget",
+			description:
+				"Implement live chat widget for real-time customer support and assistance",
+			priority: "high"
+		},
+		{
 			title: "Analytics Dashboard",
 			description:
 				"Add simple metrics page showing response times and ticket statistics",
 			priority: "medium"
 		},
 		{
-			title: "Customer Portal",
-			description: "Build customer-facing view for ticket management",
-			priority: "medium"
-		},
-		{
-			title: "Feedback System",
-			description: "Add rating and comment functionality for resolved tickets",
-			priority: "low"
-		},
-		{
 			title: "Notifications Panel",
 			description: "Implement basic notification system for updates",
-			priority: "low"
-		},
-		{
-			title: "Knowledge Base",
-			description:
-				"Create basic article listing and placeholder for FAQ system",
-			priority: "low"
-		},
-		{
-			title: "Bulk Operations",
-			description:
-				"Add multi-select functionality to dashboard for bulk actions (close, mark as spam, etc.)",
 			priority: "low"
 		}
 	] as Todo[]

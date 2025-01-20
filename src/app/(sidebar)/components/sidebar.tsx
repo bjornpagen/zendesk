@@ -1,4 +1,4 @@
-import { LayoutDashboard, ListTodo, Users } from "lucide-react"
+import { MessageSquare, ListTodo, Users } from "lucide-react"
 
 import {
 	Sidebar as ShadcnSidebar,
@@ -14,13 +14,13 @@ import {
 // Menu items.
 const items = [
 	{
-		title: "Dashboard",
-		url: "/dashboard",
-		icon: LayoutDashboard
+		title: "Messages",
+		url: "/messages",
+		icon: MessageSquare
 	},
 	{
-		title: "Team",
-		url: "/team",
+		title: "Teams",
+		url: "/teams",
 		icon: Users
 	},
 	{

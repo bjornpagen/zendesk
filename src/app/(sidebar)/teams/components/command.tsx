@@ -11,17 +11,17 @@ import {
 } from "@/components/ui/command"
 import { Search } from "lucide-react"
 
-interface TeamCommandProps {
+interface TeamsCommandProps {
 	intextSearch: string
 	onFiltersChange: (filters: { intext: string }) => void
 	onClose?: () => void
 }
 
-export function TeamCommand({
+export function TeamsCommand({
 	intextSearch,
 	onFiltersChange,
 	onClose
-}: TeamCommandProps) {
+}: TeamsCommandProps) {
 	const [searchText, setSearchText] = useState(intextSearch)
 	const inputRef = useRef<HTMLInputElement>(null)
 

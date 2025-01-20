@@ -61,7 +61,7 @@ interface AppCommandProps {
 	}) => void
 }
 
-export function DashboardCommand({
+export function MessagesCommand({
 	selectedStatuses,
 	selectedProblems,
 	selectedPriorities,

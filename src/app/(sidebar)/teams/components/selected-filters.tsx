@@ -6,7 +6,7 @@ interface SelectedFiltersProps {
 	onFilterRemove: (type: "intext", value: string) => void
 }
 
-export function TeamSelectedFilters({
+export function TeamsSelectedFilters({
 	intext,
 	onFilterRemove
 }: SelectedFiltersProps) {
