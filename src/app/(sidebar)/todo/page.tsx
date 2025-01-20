@@ -25,6 +25,12 @@ export default function TodoPage() {
 			priority: "high"
 		},
 		{
+			title: "Add Assignee to Threads",
+			description:
+				"Implement functionality to assign team members to support threads",
+			priority: "high"
+		},
+		{
 			title: "Analytics Dashboard",
 			description:
 				"Add simple metrics page showing response times and ticket statistics",
