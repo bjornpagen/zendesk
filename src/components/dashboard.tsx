@@ -11,7 +11,7 @@ import { formatDate } from "@/lib/format"
 import { useThreadFilters } from "@/hooks/use-thread-filters"
 import { MASONRY_BREAKPOINTS } from "@/lib/constants"
 
-export default function ZendeskDashboard() {
+export default function Dashboard() {
 	const {
 		isOpen,
 		selectedStatuses,

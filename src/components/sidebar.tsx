@@ -1,7 +1,7 @@
 import { LayoutDashboard, Users } from "lucide-react"
 
 import {
-	Sidebar,
+	Sidebar as ShadcnSidebar,
 	SidebarContent,
 	SidebarGroup,
 	SidebarGroupContent,
@@ -25,9 +25,9 @@ const items = [
 	}
 ]
 
-export function AppSidebar() {
+export function Sidebar() {
 	return (
-		<Sidebar>
+		<ShadcnSidebar>
 			<SidebarContent>
 				<SidebarGroup>
 					<SidebarGroupLabel>Application</SidebarGroupLabel>
@@ -47,6 +47,6 @@ export function AppSidebar() {
 					</SidebarGroupContent>
 				</SidebarGroup>
 			</SidebarContent>
-		</Sidebar>
+		</ShadcnSidebar>
 	)
 }

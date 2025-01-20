@@ -1,5 +1,5 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
+import { Sidebar } from "@/components/sidebar"
 
 export default function Layout({
 	children,
@@ -10,7 +10,7 @@ export default function Layout({
 }) {
 	return (
 		<SidebarProvider>
-			<AppSidebar />
+			<Sidebar />
 			<main className="w-full">
 				<SidebarTrigger />
 				<div className="min-h-screen bg-background p-4 lg:px-8 xl:px-16 flex justify-center">

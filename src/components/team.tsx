@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { formatDate } from "@/lib/format"
 import { MASONRY_BREAKPOINTS } from "@/lib/constants"
 
-export default function AppTeam() {
+export default function Team() {
 	const breakpointColumnsObj = MASONRY_BREAKPOINTS
 
 	return (

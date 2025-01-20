@@ -1,5 +1,5 @@
-import AppDashboard from "@/components/app-dashboard"
+import Dashboard from "@/components/dashboard"
 
 export default function DashboardPage() {
-	return <AppDashboard />
+	return <Dashboard />
 }
