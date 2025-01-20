@@ -1,4 +1,4 @@
-import { BarChart, LayoutDashboard, Users } from "lucide-react"
+import { LayoutDashboard, Users } from "lucide-react"
 
 import {
 	Sidebar,
@@ -22,11 +22,6 @@ const items = [
 		title: "Team",
 		url: "/team",
 		icon: Users
-	},
-	{
-		title: "Analytics",
-		url: "/analytics",
-		icon: BarChart
 	}
 ]
 

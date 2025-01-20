@@ -11,11 +11,13 @@ export default function Layout({
 	return (
 		<SidebarProvider>
 			<AppSidebar />
-			<main>
+			<main className="w-full">
 				<SidebarTrigger />
-				{children}
+				<div className="min-h-screen bg-background p-4 lg:px-8 xl:px-16 flex justify-center">
+					<div className="w-full max-w-[1800px]">{children}</div>
+				</div>
+				{sheet}
 			</main>
-			{sheet}
 		</SidebarProvider>
 	)
 }

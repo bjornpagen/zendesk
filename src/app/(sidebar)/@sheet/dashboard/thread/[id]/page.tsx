@@ -54,7 +54,7 @@ export default function ThreadSheet() {
 	const searchParams = useSearchParams()
 	const messageId = searchParams.get("message")
 	const [highlightedMessageId, setHighlightedMessageId] = useState<
-		number | null
+		string | null
 	>(null)
 	const [changePropertyDialog, setChangePropertyDialog] = useState<{
 		isOpen: boolean
@@ -62,12 +62,12 @@ export default function ThreadSheet() {
 	}>({ isOpen: false, propertyType: "status" })
 
 	useEffect(() => {
-		const threadId = Number.parseInt(params.id as string, 10)
+		const threadId = params.id as string
 		const foundThread = mockThreads.find((t) => t.id === threadId)
 		setThread(foundThread || null)
 
 		if (foundThread && messageId) {
-			const targetMessageId = Number.parseInt(messageId, 10)
+			const targetMessageId = messageId
 			setHighlightedMessageId(targetMessageId)
 
 			setTimeout(() => {
