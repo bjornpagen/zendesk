@@ -22,6 +22,7 @@ export interface TeamMember {
 	email: string
 	avatar: string
 	createdAt: Date
+	team: string
 }
 
 function generateRandomDate(start: Date, end: Date) {
@@ -292,34 +293,39 @@ export const mockTeamMembers: TeamMember[] = [
 		name: "Sarah Johnson",
 		email: "sarah.j@company.com",
 		avatar: "/team/avatar-1.png",
-		createdAt: generateRandomDate(new Date(2023, 0, 1), new Date(2023, 5, 30))
+		createdAt: generateRandomDate(new Date(2023, 0, 1), new Date(2023, 5, 30)),
+		team: "privacy"
 	},
 	{
 		id: "2",
 		name: "Michael Chen",
 		email: "michael.c@company.com",
 		avatar: "/team/avatar-2.png",
-		createdAt: generateRandomDate(new Date(2023, 0, 1), new Date(2023, 5, 30))
+		createdAt: generateRandomDate(new Date(2023, 0, 1), new Date(2023, 5, 30)),
+		team: "security"
 	},
 	{
 		id: "3",
 		name: "Emily Rodriguez",
 		email: "emily.r@company.com",
 		avatar: "/team/avatar-3.png",
-		createdAt: generateRandomDate(new Date(2023, 0, 1), new Date(2023, 5, 30))
+		createdAt: generateRandomDate(new Date(2023, 0, 1), new Date(2023, 5, 30)),
+		team: "privacy"
 	},
 	{
 		id: "4",
 		name: "James Wilson",
 		email: "james.w@company.com",
 		avatar: "/team/avatar-4.png",
-		createdAt: generateRandomDate(new Date(2023, 0, 1), new Date(2023, 5, 30))
+		createdAt: generateRandomDate(new Date(2023, 0, 1), new Date(2023, 5, 30)),
+		team: "security"
 	},
 	{
 		id: "5",
 		name: "Lisa Wang",
 		email: "lisa.w@company.com",
 		avatar: "/team/avatar-5.png",
-		createdAt: generateRandomDate(new Date(2023, 0, 1), new Date(2023, 5, 30))
+		createdAt: generateRandomDate(new Date(2023, 0, 1), new Date(2023, 5, 30)),
+		team: "privacy"
 	}
 ]

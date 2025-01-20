@@ -41,7 +41,7 @@ const visibilityIcons: { [key: string]: React.ReactNode } = {
 	all: <Hash className="h-4 w-4 mr-2" />
 }
 
-export function SelectedFilters({
+export function DashboardSelectedFilters({
 	statuses,
 	problems,
 	priorities,

@@ -5,8 +5,7 @@ import Masonry from "react-masonry-css"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Search } from "lucide-react"
-import { AppCommand } from "@/components/command"
-import { SelectedFilters } from "@/components/selected-filters"
+import { DashboardSelectedFilters } from "@/components/dashboard-selected-filters"
 import { formatDate } from "@/lib/format"
 import { useThreadFilters } from "@/hooks/use-thread-filters"
 import { MASONRY_BREAKPOINTS } from "@/lib/constants"
@@ -46,7 +45,7 @@ export default function Dashboard() {
 				</div>
 			</div>
 
-			<SelectedFilters
+			<DashboardSelectedFilters
 				statuses={selectedStatuses}
 				problems={selectedProblems}
 				priorities={selectedPriorities}
