@@ -19,16 +19,22 @@ interface Todo {
 export default function TodoPage() {
 	const todos = [
 		{
-			title: "Customer Support Widget",
+			title: "Support Organizations",
 			description:
-				"Implement live chat widget for real-time customer support and assistance",
+				"Add support for organizations to the app, allowing users to manage multiple teams within a single account",
 			priority: "high"
 		},
 		{
-			title: "Add Assignee to Threads",
+			title: "Support Multiple File Attachments",
 			description:
-				"Implement functionality to assign team members to support threads",
-			priority: "high"
+				"Update messages schema and UI to allow multiple file attachments per message",
+			priority: "medium"
+		},
+		{
+			title: "Add Build Widget Script",
+			description:
+				"Implement functionality to generate and customize widget installation script",
+			priority: "medium"
 		},
 		{
 			title: "Analytics Dashboard",
