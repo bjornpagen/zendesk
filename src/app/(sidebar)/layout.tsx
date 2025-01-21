@@ -1,13 +1,19 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { Sidebar } from "./components/sidebar"
+import { syncUser } from "@/server/actions/sync"
 
-export default function Layout({
+export default async function Layout({
 	children,
 	sheet
 }: {
 	children: React.ReactNode
 	sheet: React.ReactNode
 }) {
+	// Sync user data on each page load
+	await syncUser().catch((error) => {
+		console.error("Failed to sync user:", error)
+	})
+
 	return (
 		<SidebarProvider>
 			<Sidebar />

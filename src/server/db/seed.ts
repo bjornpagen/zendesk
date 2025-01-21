@@ -21,10 +21,35 @@ function randomItem<T>(array: T[]): T {
 }
 
 async function main() {
-	// biome-ignore lint/suspicious/noConsole: Acceptable in seed script for progress tracking
-	console.log("Seeding teams...")
-	const teamCount = 5
-	const createdTeams = await db
+	console.log("Cleaning up existing data...")
+	// Delete in reverse order of dependencies to avoid foreign key conflicts
+	await db.delete(schema.messages)
+	await db.delete(schema.teamMembers)
+	await db.delete(schema.files)
+	await db.delete(schema.threads)
+	await db.delete(schema.problems)
+	await db.delete(schema.customers)
+	await db.delete(schema.users)
+	await db.delete(schema.teams)
+
+	// Create default team first
+	console.log("Creating default team...")
+	const defaultTeam = await db
+		.insert(schema.teams)
+		.values({
+			name: "Default Team"
+		})
+		.returning()
+		.then(([team]) => {
+			if (!team) {
+				throw new Error("Failed to create default team")
+			}
+			return team
+		})
+
+	console.log("Seeding additional teams...")
+	const teamCount = 4 // One less since we already created the default team
+	const additionalTeams = await db
 		.insert(schema.teams)
 		.values(
 			Array.from({ length: teamCount }).map(() => ({
@@ -33,15 +58,17 @@ async function main() {
 		)
 		.returning()
 
-	// biome-ignore lint/suspicious/noConsole: Acceptable in seed script for progress tracking
+	const createdTeams = [defaultTeam, ...additionalTeams]
+
 	console.log("Seeding users...")
 	const userCount = 10
 	const createdUsers = await db
 		.insert(schema.users)
 		.values(
-			Array.from({ length: userCount }).map(() => ({
-				clerkId: faker.string.uuid(), // must be unique
-				teamId: randomItem(createdTeams).id,
+			Array.from({ length: userCount }).map((_, index) => ({
+				clerkId: faker.string.uuid(),
+				// First 3 users go to default team, rest are random
+				teamId: index < 3 ? defaultTeam.id : randomItem(createdTeams).id,
 				avatar: faker.image.avatar(),
 				email: faker.internet.email(),
 				name: faker.person.fullName()
@@ -120,23 +147,18 @@ async function main() {
 
 	// biome-ignore lint/suspicious/noConsole: Acceptable in seed script for progress tracking
 	console.log("Seeding messages...")
-	const staffMessages: Array<
-		Omit<typeof schema.messages.$inferInsert, "createdAt" | "updatedAt" | "id">
-	> = []
-	const widgetMessages: Array<
-		Omit<typeof schema.messages.$inferInsert, "createdAt" | "updatedAt" | "id">
-	> = []
-	const emailMessages: Array<
-		Omit<typeof schema.messages.$inferInsert, "createdAt" | "updatedAt" | "id">
-	> = []
+	const staffMessages: Array<typeof schema.messages.$inferInsert> = []
+	const widgetMessages: Array<typeof schema.messages.$inferInsert> = []
+	const emailMessages: Array<typeof schema.messages.$inferInsert> = []
 
 	for (const thread of createdThreads) {
-		// Optionally attach a file
 		const randomFileId = faker.datatype.boolean()
 			? randomItem(createdFiles).id
 			: null
 
-		// staff message
+		// Create messages with random timestamps in the past 30 days
+		const timestamp = faker.date.recent({ days: 30 })
+
 		staffMessages.push({
 			type: "staff",
 			threadId: thread.id,
@@ -145,10 +167,11 @@ async function main() {
 			fileId: randomFileId,
 			messageId: null,
 			inReplyTo: null,
-			content: faker.lorem.paragraph()
+			content: faker.lorem.paragraph(),
+			createdAt: timestamp,
+			updatedAt: timestamp
 		})
 
-		// widget message
 		widgetMessages.push({
 			type: "widget",
 			threadId: thread.id,
@@ -157,10 +180,11 @@ async function main() {
 			fileId: faker.datatype.boolean() ? randomItem(createdFiles).id : null,
 			messageId: null,
 			inReplyTo: null,
-			content: faker.lorem.paragraph()
+			content: faker.lorem.paragraph(),
+			createdAt: faker.date.recent({ days: 30 }),
+			updatedAt: faker.date.recent({ days: 30 })
 		})
 
-		// email message
 		emailMessages.push({
 			type: "email",
 			threadId: thread.id,
@@ -169,7 +193,9 @@ async function main() {
 			fileId: faker.datatype.boolean() ? randomItem(createdFiles).id : null,
 			messageId: faker.string.uuid(),
 			inReplyTo: faker.datatype.boolean() ? faker.string.uuid() : null,
-			content: faker.lorem.paragraph()
+			content: faker.lorem.paragraph(),
+			createdAt: faker.date.recent({ days: 30 }),
+			updatedAt: faker.date.recent({ days: 30 })
 		})
 	}
 
@@ -183,10 +209,17 @@ async function main() {
 		Omit<typeof schema.teamMembers.$inferInsert, "createdAt" | "updatedAt">
 	> = []
 	for (const user of createdUsers) {
+		// Make first user in default team an admin
+		const role = (() => {
+			if (user.teamId === defaultTeam.id && teamMemberInserts.length === 0) {
+				return "admin"
+			}
+			return faker.datatype.boolean() ? "admin" : "member"
+		})()
 		teamMemberInserts.push({
 			userId: user.clerkId,
 			teamId: user.teamId,
-			role: faker.datatype.boolean() ? "admin" : "member",
+			role,
 			lastAssignedAt: faker.datatype.boolean()
 				? faker.date.recent({ days: 100 })
 				: null

@@ -119,7 +119,7 @@ export async function getThreads(
 	const threadIds = threadIdsQuery.map((row) => row.threadId)
 
 	/**
-	 * We'll use a CTE with DISTINCT ON to select the latest message for each thread.
+	 * We'll use a CTE with DISTINCT ON to select the latest non-staff message for each thread.
 	 * We ORDER BY threadId first, and then descending createdAt so the first row
 	 * is the newest message.
 	 */
@@ -132,7 +132,13 @@ export async function getThreads(
 				createdAt: messages.createdAt
 			})
 			.from(messages)
-			.where(inArray(messages.threadId, threadIds))
+			.where(
+				and(
+					inArray(messages.threadId, threadIds),
+					// Only select non-staff messages (email or widget)
+					or(eq(messages.type, "email"), eq(messages.type, "widget"))
+				)
+			)
 			.orderBy(messages.threadId, desc(messages.createdAt))
 	)
 

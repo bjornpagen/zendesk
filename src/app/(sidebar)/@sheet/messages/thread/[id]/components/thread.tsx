@@ -3,7 +3,7 @@
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import useSWR from "swr"
-import { getThread } from "@/server/actions/thread"
+import { getThread, sendMessage } from "@/server/actions/thread"
 import {
 	Sheet,
 	SheetContent,
@@ -62,7 +62,7 @@ export default function Thread() {
 		propertyType: "status" | "priority" | "problem"
 	}>({ isOpen: false, propertyType: "status" })
 
-	const { data: thread } = useSWR(
+	const { data: thread, mutate } = useSWR(
 		params.id ? ["thread", params.id] : null,
 		() => getThread(params.id as string)
 	)
@@ -91,12 +91,20 @@ export default function Thread() {
 		router.back()
 	}
 
-	const handleSend = () => {
-		if (!message.trim()) {
+	const handleSend = async () => {
+		if (!message.trim() || !thread) {
 			return
 		}
-		// Handle sending message here
-		setMessage("")
+
+		try {
+			await sendMessage(thread.id, message.trim())
+			setMessage("")
+			// Refresh the thread data to show the new message
+			await mutate()
+		} catch (error) {
+			console.error("Failed to send message:", error)
+			// You might want to add some error handling UI here
+		}
 	}
 
 	const handleChangeProperty = (
