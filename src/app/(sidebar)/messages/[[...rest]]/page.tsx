@@ -1,5 +1,5 @@
-import Dashboard from "./components/dashboard"
+import { Messages } from "./components/messages"
 
-export default function DashboardPage() {
-	return <Dashboard />
+export default function MessagesPage() {
+	return <Messages />
 }

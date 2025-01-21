@@ -11,7 +11,8 @@ import { MASONRY_BREAKPOINTS } from "@/lib/constants"
 
 import { MessagesCommand } from "./command"
 import { MessagesSelectedFilters } from "./selected-filters"
-export default function Messages() {
+
+export function Messages() {
 	const {
 		isOpen,
 		selectedStatuses,
