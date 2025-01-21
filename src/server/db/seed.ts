@@ -20,20 +20,6 @@ function randomItem<T>(array: T[]): T {
 	return array[Math.floor(Math.random() * array.length)]!
 }
 
-/**
- * Utility to pick multiple random items from an array without repetition.
- *
- * @param array Array to pick from
- * @param count Number of items to pick
- */
-function randomItems<T>(array: T[], count: number): T[] {
-	if (count >= array.length) {
-		return [...array]
-	}
-	const shuffled = [...array].sort(() => 0.5 - Math.random())
-	return shuffled.slice(0, count)
-}
-
 async function main() {
 	// biome-ignore lint/suspicious/noConsole: Acceptable in seed script for progress tracking
 	console.log("Seeding teams...")
