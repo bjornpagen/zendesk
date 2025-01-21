@@ -2,13 +2,14 @@
 
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
+import useSWR from "swr"
+import { getThread } from "@/server/actions/thread"
 import {
 	Sheet,
 	SheetContent,
 	SheetHeader,
 	SheetTitle
 } from "@/components/ui/sheet"
-import { mockThreads, type Thread as ThreadType } from "@/types/frontend"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -50,10 +51,9 @@ const capitalizeFirstLetter = (string: string) => {
 export default function Thread() {
 	const params = useParams()
 	const router = useRouter()
-	const [thread, setThread] = useState<ThreadType | null>(null)
-	const [message, setMessage] = useState("")
 	const searchParams = useSearchParams()
 	const messageId = searchParams.get("message")
+	const [message, setMessage] = useState("")
 	const [highlightedMessageId, setHighlightedMessageId] = useState<
 		string | null
 	>(null)
@@ -62,12 +62,13 @@ export default function Thread() {
 		propertyType: "status" | "priority" | "problem"
 	}>({ isOpen: false, propertyType: "status" })
 
-	useEffect(() => {
-		const threadId = params.id as string
-		const foundThread = mockThreads.find((t) => t.id === threadId)
-		setThread(foundThread || null)
+	const { data: thread } = useSWR(
+		params.id ? ["thread", params.id] : null,
+		() => getThread(params.id as string)
+	)
 
-		if (foundThread && messageId) {
+	useEffect(() => {
+		if (thread && messageId) {
 			const targetMessageId = messageId
 			setHighlightedMessageId(targetMessageId)
 
@@ -79,13 +80,12 @@ export default function Thread() {
 					targetElement.scrollIntoView({ behavior: "smooth", block: "center" })
 				}
 
-				// Remove highlight after 1 second
 				setTimeout(() => {
 					setHighlightedMessageId(null)
 				}, 1000)
 			}, 100)
 		}
-	}, [params.id, messageId])
+	}, [thread, messageId])
 
 	const handleClose = () => {
 		router.back()
@@ -106,14 +106,8 @@ export default function Thread() {
 	}
 
 	const handlePropertyChange = (newValue: string) => {
-		if (thread) {
-			const updatedThread = {
-				...thread,
-				[changePropertyDialog.propertyType]: newValue
-			}
-			setThread(updatedThread)
-			// Here you would typically update the thread in your backend
-		}
+		// TODO: Implement server action to update thread properties
+		// For now, we'll rely on revalidation from useSWR
 	}
 
 	if (!thread) {
@@ -128,7 +122,7 @@ export default function Thread() {
 						<SheetTitle>{thread.subject}</SheetTitle>
 					</SheetHeader>
 					<div className="flex items-center space-x-2 text-sm">
-						<span className="font-medium">{thread.customerName}</span>
+						<span className="font-medium">{thread.customer.name}</span>
 						<span>•</span>
 						<Badge
 							variant={getStatusVariant(thread.status)}
@@ -151,7 +145,7 @@ export default function Thread() {
 							className="capitalize cursor-pointer"
 							onClick={() => handleChangeProperty("problem")}
 						>
-							{thread.problem.replace("-", " ")}
+							{thread.problem?.title || "No Problem"}
 						</Badge>
 					</div>
 				</div>
@@ -171,25 +165,27 @@ export default function Thread() {
 								<Avatar>
 									<AvatarImage
 										src={
-											message.author === "customer"
-												? "/placeholder.svg"
-												: "/agent-placeholder.svg"
+											message.type === "staff"
+												? message.user?.avatar
+												: "/placeholder.svg"
 										}
 									/>
 									<AvatarFallback>
-										{message.author === "customer" ? "C" : "A"}
+										{message.type === "staff"
+											? message.user?.name?.charAt(0) || "A"
+											: thread.customer.name.charAt(0)}
 									</AvatarFallback>
 								</Avatar>
 								<div className="flex flex-col">
 									<p className="text-sm font-medium">
-										{message.author === "customer"
-											? thread.customerName
-											: "Support Agent"}
+										{message.type === "staff"
+											? message.user?.name || "Support Agent"
+											: thread.customer.name}
 									</p>
 									<p className="text-xs text-muted-foreground mb-1">
 										{formatDate(message.createdAt)}
 									</p>
-									<p className="text-sm">{message.body}</p>
+									<p className="text-sm">{message.content}</p>
 								</div>
 							</div>
 						))}
@@ -235,7 +231,11 @@ export default function Thread() {
 					setChangePropertyDialog({ ...changePropertyDialog, isOpen: false })
 				}
 				propertyType={changePropertyDialog.propertyType}
-				currentValue={thread[changePropertyDialog.propertyType]}
+				currentValue={
+					changePropertyDialog.propertyType === "problem"
+						? (thread.problem?.title ?? "")
+						: (thread[changePropertyDialog.propertyType] as string)
+				}
 				onChangeProperty={handlePropertyChange}
 			/>
 		</Sheet>

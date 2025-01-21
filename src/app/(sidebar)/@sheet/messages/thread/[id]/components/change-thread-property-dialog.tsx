@@ -24,6 +24,8 @@ import {
 	Clock
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import useSWR from "swr"
+import { getProblems, type Problem } from "@/server/actions/problems"
 
 interface ChangeThreadPropertyDialogProps {
 	isOpen: boolean
@@ -41,6 +43,7 @@ export function ChangeThreadPropertyDialog({
 	onChangeProperty
 }: ChangeThreadPropertyDialogProps) {
 	const [searchText, setSearchText] = useState("")
+	const { data: problems = [] } = useSWR<Problem[]>("problems", getProblems)
 
 	const statusOptions = [
 		{ value: "open", label: "Open", icon: Mail },
@@ -53,13 +56,6 @@ export function ChangeThreadPropertyDialog({
 		{ value: "non-urgent", label: "Non-Urgent", icon: Clock }
 	]
 
-	const problemOptions = [
-		{ value: "password-reset", label: "Password Reset", icon: Hash },
-		{ value: "billing-issue", label: "Billing Issue", icon: Hash },
-		{ value: "account-access", label: "Account Access", icon: Hash },
-		{ value: "feature-request", label: "Feature Request", icon: Hash }
-	]
-
 	const getOptions = () => {
 		switch (propertyType) {
 			case "status":
@@ -67,7 +63,11 @@ export function ChangeThreadPropertyDialog({
 			case "priority":
 				return priorityOptions
 			case "problem":
-				return problemOptions
+				return problems.map((problem) => ({
+					value: problem.id,
+					label: problem.title,
+					icon: Hash
+				}))
 			default:
 				return []
 		}

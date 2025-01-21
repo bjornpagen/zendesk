@@ -10,6 +10,7 @@ import {
 	index
 } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
+import { relations } from "drizzle-orm"
 
 export const createTable = pgTableCreator((name) => `zendesk_${name}`)
 
@@ -196,3 +197,26 @@ export const teamMembers = createTable(
 		)
 	})
 )
+
+export const threadsRelations = relations(threads, ({ many, one }) => ({
+	messages: many(messages),
+	customer: one(customers, {
+		fields: [threads.customerId],
+		references: [customers.id]
+	}),
+	problem: one(problems, {
+		fields: [threads.problemId],
+		references: [problems.id]
+	})
+}))
+
+export const messagesRelations = relations(messages, ({ one }) => ({
+	thread: one(threads, {
+		fields: [messages.threadId],
+		references: [threads.id]
+	}),
+	user: one(users, {
+		fields: [messages.userClerkId],
+		references: [users.clerkId]
+	})
+}))
