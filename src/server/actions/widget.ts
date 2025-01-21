@@ -30,7 +30,7 @@ export async function getWidgetThread(threadId: string) {
 		where: eq(schema.threads.id, threadId),
 		with: {
 			messages: {
-				orderBy: [asc(schema.messages.createdAt)],
+				orderBy: [desc(schema.messages.createdAt)],
 				columns: {
 					id: true,
 					content: true,
@@ -103,7 +103,7 @@ export async function getWidgetThreads() {
 		where: eq(schema.threads.customerId, customerId),
 		with: {
 			messages: {
-				orderBy: [asc(schema.messages.createdAt)],
+				orderBy: [desc(schema.messages.createdAt)],
 				columns: {
 					id: true,
 					content: true,
@@ -156,7 +156,7 @@ export async function createWidgetThread() {
 		where: eq(schema.threads.id, newThread.id),
 		with: {
 			messages: {
-				orderBy: [asc(schema.messages.createdAt)],
+				orderBy: [desc(schema.messages.createdAt)],
 				columns: {
 					id: true,
 					content: true,

@@ -120,7 +120,7 @@ export function Widget() {
 					{activeThread ? (
 						<>
 							<ScrollArea className="flex-1 p-4">
-								<div className="space-y-4">
+								<div className="space-y-4 flex flex-col-reverse">
 									{activeThreadData?.messages.map((msg) => (
 										<div
 											key={msg.id}
