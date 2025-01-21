@@ -135,7 +135,10 @@ export const threads = createTable(
 			.notNull()
 			.$type<"open" | "closed" | "spam">()
 			.default("open"),
-		subject: text("subject").notNull()
+		subject: text("subject").notNull(),
+		lastReadAt: timestamp("last_read_at")
+			.notNull()
+			.$default(() => new Date())
 	},
 	(table) => ({
 		assignedToClerkIdIndex: index("threads_assigned_to_clerk_id_idx").on(
@@ -157,26 +160,6 @@ export const teams = createTable(
 	},
 	(table) => ({
 		nameIndex: index("teams_name_idx").on(table.name)
-	})
-)
-
-export const userThreads = createTable(
-	"user_thread",
-	{
-		userClerkId: text("user_clerk_id")
-			.notNull()
-			.references(() => users.clerkId),
-		threadId: char("thread_id", { length: 24 })
-			.notNull()
-			.references(() => threads.id),
-		...timestamps,
-		lastReadAt: timestamp("last_read_at")
-			.notNull()
-			.$default(() => new Date())
-	},
-	(table) => ({
-		pk: primaryKey({ columns: [table.userClerkId, table.threadId] }),
-		lastReadAtIndex: index("user_threads_last_read_at_idx").on(table.lastReadAt)
 	})
 )
 

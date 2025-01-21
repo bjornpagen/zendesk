@@ -2,18 +2,16 @@
 
 import {
 	and,
+	desc,
 	eq,
 	gte,
 	ilike,
 	inArray,
-	isNotNull,
 	isNull,
 	lt,
 	max,
 	or,
-	type sql,
-	type SQL,
-	desc
+	type SQL
 } from "drizzle-orm"
 import { db } from "@/server/db"
 import * as schema from "@/server/db/schema"
@@ -25,43 +23,8 @@ export type ThreadWithLatestMessage = {
 	customerName: string
 	latestMessage: {
 		id: string
-		body: string
+		content: string
 		createdAt: Date
-	}
-}
-
-/**
- * Ensures userThread entries exist for the given user and thread IDs.
- * Creates any missing entries with default lastReadAt timestamps.
- */
-async function ensureUserThreads(clerkId: string, threadIds: string[]) {
-	const { userThreads } = schema
-
-	// Find existing userThread rows for this user
-	const existingRows = await db
-		.select()
-		.from(userThreads)
-		.where(
-			and(
-				eq(userThreads.userClerkId, clerkId),
-				inArray(userThreads.threadId, threadIds)
-			)
-		)
-
-	// Get set of thread IDs that already have userThread entries
-	const existingThreadIds = new Set(existingRows.map((row) => row.threadId))
-
-	// Find thread IDs that need new userThread entries
-	const missingIds = threadIds.filter((id) => !existingThreadIds.has(id))
-
-	// Create missing userThread entries
-	if (missingIds.length > 0) {
-		await db.insert(userThreads).values(
-			missingIds.map((id) => ({
-				userClerkId: clerkId,
-				threadId: id
-			}))
-		)
 	}
 }
 
@@ -82,8 +45,8 @@ export async function getThreads(
 		throw new Error("Unauthorized")
 	}
 
-	const { threads, customers, messages, userThreads } = schema
-	const conditions: Array<ReturnType<typeof sql>> = []
+	const { threads, customers, messages } = schema
+	const conditions: SQL[] = []
 
 	// Filter by statuses
 	if (statuses.length > 0) {
@@ -97,45 +60,40 @@ export async function getThreads(
 	if (priorities.length > 0) {
 		conditions.push(inArray(threads.priority, priorities))
 	}
-	// Add condition to filter userThreads by current user
-	conditions.push(eq(userThreads.userClerkId, clerkId))
 
 	const wantsRead = visibility.includes("read")
 	const wantsUnread = visibility.includes("unread")
 
 	/**
 	 * Subselect for the latest message time per thread:
-	 * SELECT MAX(messages.createdAt)
+	 * SELECT MAX(messages.createdAt) as "lastMessageTime"
 	 * FROM messages
 	 * WHERE messages.threadId = threads.id
 	 */
 	const lastMessageTimeSubselect = db
 		.select({
-			lastMessageTime: max(messages.createdAt)
+			lastMessageTime: max(messages.createdAt).as("lastMessageTime")
 		})
 		.from(messages)
 		.where(eq(messages.threadId, threads.id))
 		.as("lastMessageTimeSubselect")
 
-	let readCondition: SQL<unknown> | undefined
-	let unreadCondition: SQL<unknown> | undefined
-	if (wantsRead) {
-		readCondition = and(
-			isNotNull(userThreads.threadId),
-			gte(userThreads.lastReadAt, lastMessageTimeSubselect.lastMessageTime)
+	// For "read" => thread.lastReadAt >= the last message creation time
+	// For "unread" => thread.lastReadAt < the last message creation time OR thread.lastReadAt is null
+	let lastReadAtCondition: SQL<unknown> | undefined
+	if (wantsRead && !wantsUnread) {
+		lastReadAtCondition = gte(
+			threads.lastReadAt,
+			lastMessageTimeSubselect.lastMessageTime
+		)
+	} else if (!wantsRead && wantsUnread) {
+		lastReadAtCondition = or(
+			isNull(threads.lastReadAt),
+			lt(threads.lastReadAt, lastMessageTimeSubselect.lastMessageTime)
 		)
 	}
-	if (wantsUnread) {
-		unreadCondition = or(
-			isNull(userThreads.threadId),
-			lt(userThreads.lastReadAt, lastMessageTimeSubselect.lastMessageTime)
-		)
-	}
-	// If user has chosen exactly one => add that condition
-	if (wantsRead && !wantsUnread && readCondition) {
-		conditions.push(readCondition)
-	} else if (!wantsRead && wantsUnread && unreadCondition) {
-		conditions.push(unreadCondition)
+	if (lastReadAtCondition) {
+		conditions.push(lastReadAtCondition)
 	}
 
 	// Filter by intext => look for subject or message content match.
@@ -156,11 +114,9 @@ export async function getThreads(
 		.from(threads)
 		.innerJoin(customers, eq(threads.customerId, customers.id))
 		.leftJoin(messages, eq(threads.id, messages.threadId))
-		.leftJoin(userThreads, eq(threads.id, userThreads.threadId))
 		.where(conditions.length > 0 ? and(...conditions) : undefined)
 
 	const threadIds = threadIdsQuery.map((row) => row.threadId)
-	await ensureUserThreads(clerkId, threadIds)
 
 	/**
 	 * We'll use a CTE with DISTINCT ON to select the latest message for each thread.
@@ -202,7 +158,7 @@ export async function getThreads(
 		customerName: row.customerName,
 		latestMessage: {
 			id: row.messageId,
-			body: row.content,
+			content: row.content,
 			createdAt: row.messageCreatedAt
 		}
 	}))

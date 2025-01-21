@@ -92,8 +92,7 @@ export function Messages() {
 				{filteredThreads.map((thread) => (
 					<Link
 						href={`/messages/thread/${thread.id}?message=${
-							// biome-ignore lint/style/noNonNullAssertion: Thread messages array is guaranteed to have at least one message
-							thread.messages[thread.messages.length - 1]!.id
+							thread.latestMessage.id
 						}`}
 						key={thread.id}
 					>
@@ -102,19 +101,11 @@ export function Messages() {
 								<div className="flex justify-between items-start">
 									<p className="text-sm font-medium">{thread.customerName}</p>
 									<p className="text-xs text-muted-foreground">
-										{formatDate(
-											// biome-ignore lint/style/noNonNullAssertion: Thread messages array is guaranteed to have at least one message
-											thread.messages[thread.messages.length - 1]!.createdAt
-										)}
+										{formatDate(thread.latestMessage.createdAt)}
 									</p>
 								</div>
 								<div className="text-sm" aria-label={thread.subject}>
-									<p>
-										{
-											// biome-ignore lint/style/noNonNullAssertion: Thread messages array is guaranteed to have at least one message
-											thread.messages[thread.messages.length - 1]!.body
-										}
-									</p>
+									<p>{thread.latestMessage.content}</p>
 								</div>
 							</CardContent>
 						</Card>

@@ -1,6 +1,10 @@
-import { useMemo, useCallback, useEffect } from "react"
+"use client"
+
+import { useCallback, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { mockThreads } from "@/types/frontend"
+import { getThreads } from "@/server/actions/threads"
+import { z } from "zod"
+import useSWR from "swr"
 
 interface Filters {
 	statuses: string[]
@@ -10,17 +14,57 @@ interface Filters {
 	intext: string
 }
 
+// Define the enums for our filter types
+const ThreadStatus = z.enum(["open", "closed", "spam"])
+const ThreadPriority = z.enum(["urgent", "non-urgent"])
+const ThreadVisibility = z.enum(["read", "unread"])
+
+// Schema for validating URL parameters
+const SearchParamsSchema = z.object({
+	command: z.literal("open").optional(),
+	status: z
+		.string()
+		.transform((str) => str.split(","))
+		.pipe(z.array(ThreadStatus))
+		.optional(),
+	problem: z
+		.string()
+		.transform((str) => str.split(","))
+		.pipe(z.array(z.string()))
+		.optional(),
+	priority: z
+		.string()
+		.transform((str) => str.split(","))
+		.pipe(z.array(ThreadPriority))
+		.optional(),
+	visibility: z
+		.string()
+		.transform((str) => str.split(","))
+		.pipe(z.array(ThreadVisibility))
+		.optional(),
+	q: z.string().optional()
+})
+
 export function useThreadFilters() {
 	const router = useRouter()
 	const searchParams = useSearchParams()
 
-	// Pull values from the search params
-	const isOpen = searchParams.get("command") === "open"
-	const selectedStatuses = searchParams.get("status")?.split(",") || []
-	const selectedProblems = searchParams.get("problem")?.split(",") || []
-	const selectedPriorities = searchParams.get("priority")?.split(",") || []
-	const selectedVisibility = searchParams.get("visibility")?.split(",") || []
-	const intextSearch = searchParams.get("q") || ""
+	// Parse and validate search params
+	const parsedParams = SearchParamsSchema.safeParse(
+		Object.fromEntries(searchParams.entries())
+	)
+
+	// Use validated params or fallback to defaults
+	const {
+		command = undefined,
+		status: selectedStatuses = [],
+		problem: selectedProblems = [],
+		priority: selectedPriorities = [],
+		visibility: selectedVisibility = [],
+		q: intextSearch = ""
+	} = parsedParams.success ? parsedParams.data : {}
+
+	const isOpen = command === "open"
 
 	// Update the URL with the new parameters
 	const updateSearchParams = useCallback(
@@ -48,45 +92,27 @@ export function useThreadFilters() {
 		[updateSearchParams]
 	)
 
-	// Compute the filtered threads list
-	const filteredThreads = useMemo(() => {
-		return mockThreads.filter((thread) => {
-			const matchesStatus =
-				selectedStatuses.length === 0 ||
-				selectedStatuses.includes(thread.status)
-			const matchesProblem =
-				selectedProblems.length === 0 ||
-				selectedProblems.includes(thread.problem)
-			const matchesPriority =
-				selectedPriorities.length === 0 ||
-				selectedPriorities.includes(thread.priority)
-			const matchesVisibility =
-				selectedVisibility.length === 0 ||
-				(selectedVisibility.includes("read") && thread.isRead) ||
-				(selectedVisibility.includes("unread") && !thread.isRead)
-			const intextLower = intextSearch.toLowerCase()
-			const matchesIntext =
-				!intextSearch ||
-				thread.subject.toLowerCase().includes(intextLower) ||
-				thread.messages.some((message) =>
-					message.body.toLowerCase().includes(intextLower)
-				)
-
-			return (
-				matchesStatus &&
-				matchesProblem &&
-				matchesPriority &&
-				matchesVisibility &&
-				matchesIntext
+	// Replace useState and useEffect with useSWR
+	const { data: threads = [] } = useSWR(
+		// Create a unique key based on all filter parameters
+		[
+			"threads",
+			selectedStatuses,
+			selectedProblems,
+			selectedPriorities,
+			selectedVisibility,
+			intextSearch
+		],
+		// Fetch function that ignores the key and uses the filter parameters
+		() =>
+			getThreads(
+				selectedStatuses,
+				selectedProblems,
+				selectedPriorities,
+				selectedVisibility,
+				intextSearch
 			)
-		})
-	}, [
-		selectedStatuses,
-		selectedProblems,
-		selectedPriorities,
-		selectedVisibility,
-		intextSearch
-	])
+	)
 
 	// Keyboard shortcuts for toggling the command overlay (⌘J or Ctrl+J)
 	useEffect(() => {
@@ -134,7 +160,7 @@ export function useThreadFilters() {
 		selectedPriorities,
 		selectedVisibility,
 		intextSearch,
-		filteredThreads,
+		filteredThreads: threads,
 		handleOpenChange,
 		onFiltersChange,
 		updateSearchParams

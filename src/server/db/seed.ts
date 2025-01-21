@@ -178,29 +178,6 @@ async function main() {
 		.values([...staffMessages, ...widgetMessages, ...emailMessages])
 
 	// biome-ignore lint/suspicious/noConsole: Acceptable in seed script for progress tracking
-	console.log("Seeding userThreads...")
-	const userThreadInserts: Array<
-		Omit<typeof schema.userThreads.$inferInsert, "createdAt" | "updatedAt">
-	> = []
-	for (let i = 0; i < 20; i++) {
-		const randomUser = randomItem(createdUsers)
-		const randomThread = randomItem(createdThreads)
-		// Avoid duplicates
-		const pairExists = userThreadInserts.some(
-			(ut) =>
-				ut.userClerkId === randomUser.clerkId && ut.threadId === randomThread.id
-		)
-		if (!pairExists) {
-			userThreadInserts.push({
-				userClerkId: randomUser.clerkId,
-				threadId: randomThread.id,
-				lastReadAt: faker.date.recent({ days: 365 })
-			})
-		}
-	}
-	await db.insert(schema.userThreads).values(userThreadInserts)
-
-	// biome-ignore lint/suspicious/noConsole: Acceptable in seed script for progress tracking
 	console.log("Seeding teamMembers...")
 	const teamMemberInserts: Array<
 		Omit<typeof schema.teamMembers.$inferInsert, "createdAt" | "updatedAt">

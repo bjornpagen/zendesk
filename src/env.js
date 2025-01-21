@@ -13,7 +13,7 @@ export const env = createEnv({
 		AWS_S3_BUCKET_NAME: z.string(),
 		OPENAI_API_KEY: z.string(),
 		CLERK_SECRET_KEY: z.string(),
-		DATABASE_URL: z.string().url(),
+		POSTGRES_URL: z.string().url(),
 		NODE_ENV: z
 			.enum(["development", "test", "production"])
 			.default("development")
@@ -38,7 +38,7 @@ export const env = createEnv({
 		AWS_REGION: process.env.AWS_REGION,
 		AWS_S3_BUCKET_NAME: process.env.AWS_S3_BUCKET_NAME,
 		OPENAI_API_KEY: process.env.OPENAI_API_KEY,
-		DATABASE_URL: process.env.DATABASE_URL,
+		POSTGRES_URL: process.env.POSTGRES_URL,
 		NODE_ENV: process.env.NODE_ENV,
 		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
 			process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
