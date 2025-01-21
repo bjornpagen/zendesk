@@ -19,6 +19,12 @@ interface Todo {
 export default function TodoPage() {
 	const todos = [
 		{
+			title: "Fix Read/Unread Filters",
+			description:
+				"Fix the read/unread filters so that they work correctly and are consistent with the messages page",
+			priority: "high"
+		},
+		{
 			title: "Support Organizations",
 			description:
 				"Add support for organizations to the app, allowing users to manage multiple teams within a single account",

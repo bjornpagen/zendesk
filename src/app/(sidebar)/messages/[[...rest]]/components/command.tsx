@@ -21,30 +21,8 @@ import {
 	AlertCircle,
 	Clock
 } from "lucide-react"
-
-// Updated mock data for problems with proper capitalization
-const mockProblems = [
-	{
-		slug: "password-reset",
-		title: "Password Reset",
-		description: "Issues related to password resets"
-	},
-	{
-		slug: "billing-issue",
-		title: "Billing Issue",
-		description: "Problems with billing or payments"
-	},
-	{
-		slug: "account-access",
-		title: "Account Access",
-		description: "Difficulties accessing user accounts"
-	},
-	{
-		slug: "feature-request",
-		title: "Feature Request",
-		description: "Requests for new features or improvements"
-	}
-]
+import useSWR from "swr"
+import { getProblems, type Problem } from "@/server/actions/problems"
 
 interface AppCommandProps {
 	selectedStatuses: string[]
@@ -72,6 +50,8 @@ export function MessagesCommand({
 	const [searchText, setSearchText] = useState(intextSearch)
 
 	const inputRef = useRef<HTMLInputElement>(null)
+
+	const { data: problems = [] } = useSWR<Problem[]>("problems", getProblems)
 
 	useEffect(() => {
 		const focusInput = () => {
@@ -264,14 +244,14 @@ export function MessagesCommand({
 				</CommandGroup>
 				<CommandSeparator />
 				<CommandGroup heading="Filter Problems" className="p-2">
-					{mockProblems.map((problem) => (
+					{problems.map((problem) => (
 						<CommandItem
-							key={problem.slug}
-							onSelect={() => toggleProblem(problem.slug)}
+							key={problem.id}
+							onSelect={() => toggleProblem(problem.id)}
 						>
 							<Hash className="mr-2 h-4 w-4" />
 							<span>{problem.title}</span>
-							<span className={invisibleStyle}>problem:{problem.slug}</span>
+							<span className={invisibleStyle}>problem:{problem.id}</span>
 						</CommandItem>
 					))}
 				</CommandGroup>
