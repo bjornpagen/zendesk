@@ -16,7 +16,8 @@
 		"typecheck": "tsc --noEmit",
 		"format:write": "biome format --write .",
 		"format:lint": "biome lint --write .",
-		"format": "biome format --write . && biome lint --write ."
+		"format": "biome format --write . && biome lint --write .",
+		"db:seed": "ts-node src/server/db/seed.ts"
 	},
 	"dependencies": {
 		"@aws-sdk/client-s3": "^3.730.0",
@@ -47,12 +48,14 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
+		"@faker-js/faker": "^9.4.0",
 		"@types/node": "^20.17.14",
 		"@types/react": "^18.3.18",
 		"@types/react-dom": "^18.3.5",
 		"drizzle-kit": "^0.24.2",
 		"postcss": "^8.5.1",
 		"tailwindcss": "^3.4.17",
+		"ts-node": "^10.9.2",
 		"typescript": "^5.7.3"
 	},
 	"ct3aMetadata": {

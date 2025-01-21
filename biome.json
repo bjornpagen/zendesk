@@ -20,7 +20,7 @@
 		"enabled": true,
 		"rules": {
 			"suspicious": {
-				"noConsoleLog": "warn"
+				"noConsole": "warn"
 			},
 			"recommended": true,
 			"correctness": {
