@@ -1,14 +1,30 @@
-import { useMemo, useCallback } from "react"
+import { useCallback, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { mockTeamMembers } from "@/types/frontend"
+import { z } from "zod"
+import useSWR from "swr"
+import { getTeamMembers } from "@/server/actions/teams"
+
+// Define schema for validating URL parameters
+const SearchParamsSchema = z.object({
+	command: z.literal("open").optional(),
+	q: z.string().optional()
+})
 
 export function useTeamFilters() {
 	const router = useRouter()
 	const searchParams = useSearchParams()
 
-	// Pull values from the search params
-	const isOpen = searchParams.get("command") === "open"
-	const intextSearch = searchParams.get("q") || ""
+	// Parse and validate search params
+	const parsedParams = SearchParamsSchema.safeParse(
+		Object.fromEntries(searchParams.entries())
+	)
+
+	// Use validated params or fallback to defaults
+	const { command = undefined, q: intextSearch = "" } = parsedParams.success
+		? parsedParams.data
+		: {}
+
+	const isOpen = command === "open"
 
 	// Update the URL with the new parameters
 	const updateSearchParams = useCallback(
@@ -34,17 +50,34 @@ export function useTeamFilters() {
 		[updateSearchParams]
 	)
 
-	// Compute the filtered team members list
-	const filteredTeamMembers = useMemo(() => {
-		return mockTeamMembers.filter((member) => {
-			const intextLower = intextSearch.toLowerCase()
-			return (
-				!intextSearch ||
-				member.name.toLowerCase().includes(intextLower) ||
-				member.email.toLowerCase().includes(intextLower)
-			)
-		})
-	}, [intextSearch])
+	// Replace useMemo with useSWR
+	const { data: filteredTeamMembers = [] } = useSWR(
+		["teamMembers", intextSearch],
+		() => getTeamMembers(intextSearch)
+	)
+
+	// Add keyboard shortcuts for command overlay (⌘J or Ctrl+J)
+	useEffect(() => {
+		const down = (e: KeyboardEvent) => {
+			if (e.key === "j" && (e.metaKey || e.ctrlKey)) {
+				e.preventDefault()
+				handleOpenChange(!isOpen)
+			}
+		}
+		document.addEventListener("keydown", down)
+		return () => document.removeEventListener("keydown", down)
+	}, [isOpen, handleOpenChange])
+
+	// Close overlay with Escape key
+	useEffect(() => {
+		const handleEscape = (e: KeyboardEvent) => {
+			if (e.key === "Escape" && isOpen) {
+				handleOpenChange(false)
+			}
+		}
+		document.addEventListener("keydown", handleEscape)
+		return () => document.removeEventListener("keydown", handleEscape)
+	}, [isOpen, handleOpenChange])
 
 	// Handler function to update search in the URL
 	const onFiltersChange = useCallback(

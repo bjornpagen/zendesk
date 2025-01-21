@@ -247,11 +247,11 @@ export function MessagesCommand({
 					{problems.map((problem) => (
 						<CommandItem
 							key={problem.id}
-							onSelect={() => toggleProblem(problem.id)}
+							onSelect={() => toggleProblem(problem.title)}
 						>
 							<Hash className="mr-2 h-4 w-4" />
-							<span>{problem.title}</span>
-							<span className={invisibleStyle}>problem:{problem.id}</span>
+							<span className="capitalize">{problem.title}</span>
+							<span className={invisibleStyle}>problem:{problem.title}</span>
 						</CommandItem>
 					))}
 				</CommandGroup>
