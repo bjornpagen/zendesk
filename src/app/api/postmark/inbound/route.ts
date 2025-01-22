@@ -2,7 +2,6 @@ import type { NextRequest } from "next/server"
 import type { PostmarkWebhookPayload } from "@/types/postmark-webhook"
 import { db } from "@/server/db"
 import * as schema from "@/server/db/schema"
-import { eq } from "drizzle-orm"
 import { uploadToS3 } from "@/server/s3"
 
 export async function POST(request: NextRequest) {
@@ -31,13 +30,11 @@ export async function POST(request: NextRequest) {
 		const fromName = payload.FromFull.Name || fromEmail.split("@")[0] || ""
 		console.log("👤 Processing customer data:", { fromEmail, fromName })
 
-		// 2. Find or create thread
-		let threadId: string | undefined
-		console.log("🔍 Looking for In-Reply-To in headers")
-		const inReplyTo = payload.Headers.find(
-			(h) => h.Name === "In-Reply-To"
-		)?.Value
-		console.log("📝 Found In-Reply-To:", inReplyTo)
+		// Extract threadId from email address if present
+		console.log("🔍 Looking for threadId in recipient email")
+		const threadIdMatch = payload.OriginalRecipient.match(/\+([^@]+)@/)
+		const existingThreadId = threadIdMatch ? threadIdMatch[1] : undefined
+		console.log("📝 Found threadId from email:", existingThreadId)
 
 		// Process first attachment if present
 		console.log("📎 Processing attachments:", payload.Attachments)
@@ -103,18 +100,9 @@ export async function POST(request: NextRequest) {
 					throw new Error("Failed to create/update customer")
 				}
 
-				// Find thread ID if it exists
-				if (inReplyTo) {
-					threadId = await tx
-						.select({ threadId: schema.messages.threadId })
-						.from(schema.messages)
-						.where(eq(schema.messages.messageId, inReplyTo))
-						.limit(1)
-						.then(([message]) => message?.threadId)
-				}
-
-				// Create new thread if needed
-				if (!threadId) {
+				// Create new thread if no threadId found in email
+				let threadId: string | undefined
+				if (!existingThreadId) {
 					const thread = await tx
 						.insert(schema.threads)
 						.values({
@@ -132,9 +120,11 @@ export async function POST(request: NextRequest) {
 						throw new Error("Failed to create thread")
 					}
 					threadId = thread.id
+				} else {
+					threadId = existingThreadId
 				}
 
-				// Create message
+				// Create message (removed inReplyTo)
 				const message = await tx
 					.insert(schema.messages)
 					.values({
@@ -142,7 +132,6 @@ export async function POST(request: NextRequest) {
 						customerId: customer.id,
 						threadId: threadId,
 						messageId: rfcMessageId,
-						inReplyTo: inReplyTo,
 						content: payload.StrippedTextReply || payload.TextBody || "",
 						fileId: fileId
 					})
@@ -199,18 +188,9 @@ export async function POST(request: NextRequest) {
 				throw new Error("Failed to create/update customer")
 			}
 
-			// Find thread ID if it exists
-			if (inReplyTo) {
-				threadId = await tx
-					.select({ threadId: schema.messages.threadId })
-					.from(schema.messages)
-					.where(eq(schema.messages.messageId, inReplyTo))
-					.limit(1)
-					.then(([message]) => message?.threadId)
-			}
-
-			// Create new thread if needed
-			if (!threadId) {
+			// Create new thread if no threadId found in email
+			let threadId: string | undefined
+			if (!existingThreadId) {
 				const thread = await tx
 					.insert(schema.threads)
 					.values({
@@ -228,9 +208,11 @@ export async function POST(request: NextRequest) {
 					throw new Error("Failed to create thread")
 				}
 				threadId = thread.id
+			} else {
+				threadId = existingThreadId
 			}
 
-			// Create message
+			// Create message (removed inReplyTo)
 			const message = await tx
 				.insert(schema.messages)
 				.values({
@@ -238,7 +220,6 @@ export async function POST(request: NextRequest) {
 					customerId: customer.id,
 					threadId: threadId,
 					messageId: rfcMessageId,
-					inReplyTo: inReplyTo,
 					content: payload.StrippedTextReply || payload.TextBody || ""
 				})
 				.returning({

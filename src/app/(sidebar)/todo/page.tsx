@@ -31,12 +31,6 @@ export default function TodoPage() {
 			priority: "medium"
 		},
 		{
-			title: "File Attachment System",
-			description:
-				"Implement complete file upload, storage, preview and download functionality with S3 integration",
-			priority: "high"
-		},
-		{
 			title: "Problem Categories System",
 			description:
 				"Implement problem category management, routing rules, and analytics",
@@ -65,12 +59,6 @@ export default function TodoPage() {
 			description:
 				"Add simple metrics page showing response times and ticket statistics",
 			priority: "medium"
-		},
-		{
-			title: "Convert Widget to iframe",
-			description:
-				"Transform the current widget implementation into an iframe-based solution for better isolation and compatibility",
-			priority: "low"
 		},
 		{
 			title: "Notifications Panel",

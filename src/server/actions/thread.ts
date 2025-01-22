@@ -12,8 +12,8 @@ import { uploadToS3 } from "@/server/s3"
 // TODO: Move to environment variables
 const WHITELISTED_DOMAIN = "gauntletai.com"
 const SUPPORT_EMAIL = "support@bjornpagen.com"
-const SUPPORT_EMAIL_REPLY_TO =
-	"71da76937c16ed736c59255930611266@inbound.postmarkapp.com"
+const SUPPORT_EMAIL_REPLY_TO = (threadId: string) =>
+	`71da76937c16ed736c59255930611266+${threadId}@inbound.postmarkapp.com`
 
 // Add schema for form validation
 const MessageFormSchema = z.object({
@@ -60,7 +60,6 @@ export async function getThread(threadId: string) {
 					type: true,
 					userClerkId: true,
 					messageId: true,
-					inReplyTo: true,
 					fileId: true
 				},
 				with: {
@@ -196,7 +195,6 @@ async function sendMessage(threadId: string, content: string, file?: File) {
 				threadId,
 				userClerkId: clerkId,
 				messageId: staffMessageId,
-				inReplyTo: inReplyToId,
 				fileId: fileId // Add the file ID if present
 			})
 			.returning({
@@ -206,7 +204,6 @@ async function sendMessage(threadId: string, content: string, file?: File) {
 				type: schema.messages.type,
 				userClerkId: schema.messages.userClerkId,
 				messageId: schema.messages.messageId,
-				inReplyTo: schema.messages.inReplyTo,
 				fileId: schema.messages.fileId
 			})
 			.then(([m]) => m)
@@ -283,10 +280,6 @@ async function sendEmailReply({
 			{
 				Name: "Message-ID",
 				Value: newMessageId
-			},
-			{
-				Name: "X-PM-Thread-Id",
-				Value: threadId
 			}
 		]
 
@@ -324,7 +317,7 @@ async function sendEmailReply({
 				await postmark.sendEmail({
 					From: SUPPORT_EMAIL,
 					To: to,
-					ReplyTo: SUPPORT_EMAIL_REPLY_TO,
+					ReplyTo: SUPPORT_EMAIL_REPLY_TO(threadId),
 					Subject: emailSubject,
 					TextBody: textBody,
 					MessageStream: "outbound",
@@ -344,7 +337,7 @@ async function sendEmailReply({
 			await postmark.sendEmail({
 				From: SUPPORT_EMAIL,
 				To: to,
-				ReplyTo: SUPPORT_EMAIL_REPLY_TO,
+				ReplyTo: SUPPORT_EMAIL_REPLY_TO(threadId),
 				Subject: emailSubject,
 				TextBody: textBody,
 				MessageStream: "outbound",
