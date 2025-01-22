@@ -5,7 +5,7 @@
  *   1. Install dependencies if necessary:
  *       pnpm install @faker-js/faker
  *   2. Execute via ts-node or a similar runner:
- *       pnpm run db:seed
+ *       bun run src/server/db/seed.ts
  */
 
 import { faker } from "@faker-js/faker"
