@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
 		console.log("📝 Found In-Reply-To:", inReplyTo)
 
 		// Process first attachment if present
+		console.log("📎 Processing attachments:", payload.Attachments)
 		let fileId: string | undefined
 		if (payload.Attachments && payload.Attachments.length > 0) {
 			const attachment = payload.Attachments[0]

@@ -12,6 +12,8 @@ import { uploadToS3 } from "@/server/s3"
 // TODO: Move to environment variables
 const WHITELISTED_DOMAIN = "gauntletai.com"
 const SUPPORT_EMAIL = "support@bjornpagen.com"
+const SUPPORT_EMAIL_REPLY_TO =
+	"71da76937c16ed736c59255930611266@inbound.postmarkapp.com"
 
 // Add schema for form validation
 const MessageFormSchema = z.object({
@@ -314,19 +316,15 @@ async function sendEmailReply({
 				// Fetch the file content from S3
 				const response = await fetch(file.url)
 				const arrayBuffer = await response.arrayBuffer()
-				// Convert ArrayBuffer to base64 string
 				const base64Content = btoa(
 					String.fromCharCode(...new Uint8Array(arrayBuffer))
 				)
 
-				headers.push(
-					{ Name: "Content-Type", Value: file.type },
-					{ Name: "Content-Transfer-Encoding", Value: "base64" }
-				)
-
+				// Remove Content-Type and Content-Transfer-Encoding from headers
 				await postmark.sendEmail({
 					From: SUPPORT_EMAIL,
 					To: to,
+					ReplyTo: SUPPORT_EMAIL_REPLY_TO,
 					Subject: emailSubject,
 					TextBody: textBody,
 					MessageStream: "outbound",
@@ -346,6 +344,7 @@ async function sendEmailReply({
 			await postmark.sendEmail({
 				From: SUPPORT_EMAIL,
 				To: to,
+				ReplyTo: SUPPORT_EMAIL_REPLY_TO,
 				Subject: emailSubject,
 				TextBody: textBody,
 				MessageStream: "outbound",
