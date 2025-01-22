@@ -254,16 +254,21 @@ export function MessagesCommand({
 				onValueChange={setSearchText}
 			/>
 			<CommandList>
-				<CommandGroup heading="Filter Visibility" className="p-2">
-					<CommandItem onSelect={() => toggleVisibility("read")}>
-						<Eye className="mr-2 h-4 w-4" />
-						<span>Read</span>
-						<span className={invisibleStyle}>visibility:read</span>
+				<CommandGroup heading="Filter Status" className="p-2">
+					<CommandItem onSelect={() => toggleStatus("open")}>
+						<Mail className="mr-2 h-4 w-4" />
+						<span>Open</span>
+						<span className={invisibleStyle}>status:open</span>
 					</CommandItem>
-					<CommandItem onSelect={() => toggleVisibility("unread")}>
-						<EyeOff className="mr-2 h-4 w-4" />
-						<span>Unread</span>
-						<span className={invisibleStyle}>visibility:unread</span>
+					<CommandItem onSelect={() => toggleStatus("closed")}>
+						<CheckCircle className="mr-2 h-4 w-4" />
+						<span>Closed</span>
+						<span className={invisibleStyle}>status:closed</span>
+					</CommandItem>
+					<CommandItem onSelect={() => toggleStatus("spam")}>
+						<AlertTriangle className="mr-2 h-4 w-4" />
+						<span>Spam</span>
+						<span className={invisibleStyle}>status:spam</span>
 					</CommandItem>
 				</CommandGroup>
 				<CommandSeparator />
@@ -280,21 +285,16 @@ export function MessagesCommand({
 					</CommandItem>
 				</CommandGroup>
 				<CommandSeparator />
-				<CommandGroup heading="Filter Status" className="p-2">
-					<CommandItem onSelect={() => toggleStatus("open")}>
-						<Mail className="mr-2 h-4 w-4" />
-						<span>Open</span>
-						<span className={invisibleStyle}>status:open</span>
+				<CommandGroup heading="Filter Visibility" className="p-2">
+					<CommandItem onSelect={() => toggleVisibility("read")}>
+						<Eye className="mr-2 h-4 w-4" />
+						<span>Read</span>
+						<span className={invisibleStyle}>visibility:read</span>
 					</CommandItem>
-					<CommandItem onSelect={() => toggleStatus("closed")}>
-						<CheckCircle className="mr-2 h-4 w-4" />
-						<span>Closed</span>
-						<span className={invisibleStyle}>status:closed</span>
-					</CommandItem>
-					<CommandItem onSelect={() => toggleStatus("spam")}>
-						<AlertTriangle className="mr-2 h-4 w-4" />
-						<span>Spam</span>
-						<span className={invisibleStyle}>status:spam</span>
+					<CommandItem onSelect={() => toggleVisibility("unread")}>
+						<EyeOff className="mr-2 h-4 w-4" />
+						<span>Unread</span>
+						<span className={invisibleStyle}>visibility:unread</span>
 					</CommandItem>
 				</CommandGroup>
 				<CommandSeparator />

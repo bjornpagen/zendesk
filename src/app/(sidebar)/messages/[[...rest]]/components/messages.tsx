@@ -8,11 +8,13 @@ import { Search } from "lucide-react"
 import { formatDate } from "@/lib/format"
 import { useThreadFilters } from "@/hooks/use-thread-filters"
 import { MASONRY_BREAKPOINTS } from "@/lib/constants"
+import { useSearchParams } from "next/navigation"
 
 import { MessagesCommand } from "./command"
 import { MessagesSelectedFilters } from "./selected-filters"
 
 export function Messages() {
+	const searchParams = useSearchParams()
 	const {
 		isOpen,
 		selectedStatuses,
@@ -101,7 +103,7 @@ export function Messages() {
 					<Link
 						href={`/messages/thread/${thread.id}?message=${
 							thread.latestMessage.id
-						}`}
+						}&${searchParams.toString()}`}
 						key={thread.id}
 					>
 						<Card className="mb-4 cursor-pointer hover:shadow-md transition-shadow">

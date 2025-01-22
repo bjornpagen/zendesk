@@ -26,6 +26,8 @@ import {
 import { cn } from "@/lib/utils"
 import useSWR from "swr"
 import { getProblems, type Problem } from "@/server/actions/problems"
+import { updateThreadProperty } from "@/server/actions/thread"
+import { useParams } from "next/navigation"
 
 interface ChangeThreadPropertyDialogProps {
 	isOpen: boolean
@@ -42,8 +44,12 @@ export function ChangeThreadPropertyDialog({
 	currentValue,
 	onChangeProperty
 }: ChangeThreadPropertyDialogProps) {
+	const params = useParams()
 	const [searchText, setSearchText] = useState("")
 	const { data: problems = [] } = useSWR<Problem[]>("problems", getProblems)
+	const { mutate: mutateThread } = useSWR(
+		params.id ? ["thread", params.id] : null
+	)
 
 	const statusOptions = [
 		{ value: "open", label: "Open", icon: Mail },
@@ -74,11 +80,40 @@ export function ChangeThreadPropertyDialog({
 	}
 
 	const handleSelect = useCallback(
-		(value: string) => {
-			onChangeProperty(value)
-			onClose()
+		async (value: string) => {
+			if (!params.id) {
+				return
+			}
+
+			// Map propertyType to database field
+			const dbField = propertyType === "problem" ? "problemId" : propertyType
+
+			try {
+				// Optimistically update UI
+				onChangeProperty(value)
+				onClose()
+
+				// Update database
+				await updateThreadProperty(params.id as string, dbField, value)
+
+				// Revalidate thread data
+				await mutateThread()
+			} catch (error) {
+				console.error("Failed to update thread property:", error)
+				// TODO: Show error toast
+
+				// Revert optimistic update on error
+				onChangeProperty(currentValue)
+			}
 		},
-		[onChangeProperty, onClose]
+		[
+			params.id,
+			propertyType,
+			onChangeProperty,
+			onClose,
+			mutateThread,
+			currentValue
+		]
 	)
 
 	return (

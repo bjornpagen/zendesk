@@ -83,15 +83,15 @@ export function MessagesSelectedFilters({
 
 	return (
 		<div className="flex flex-wrap gap-2 mb-4">
-			{visibility.map((v) => (
+			{statuses.map((status) => (
 				<Badge
-					key={v}
+					key={status}
 					variant="secondary"
 					className="flex items-center cursor-pointer"
-					onClick={() => onFilterRemove("visibility", v)}
+					onClick={() => onFilterRemove("status", status)}
 				>
-					{visibilityIcons[v]}
-					<span className="capitalize">{v}</span>
+					{statusIcons[status]}
+					<span className="capitalize">{status}</span>
 				</Badge>
 			))}
 			{needsResponse.map((value) => (
@@ -105,15 +105,15 @@ export function MessagesSelectedFilters({
 					<span>{responseLabels[value]}</span>
 				</Badge>
 			))}
-			{statuses.map((status) => (
+			{visibility.map((v) => (
 				<Badge
-					key={status}
+					key={v}
 					variant="secondary"
 					className="flex items-center cursor-pointer"
-					onClick={() => onFilterRemove("status", status)}
+					onClick={() => onFilterRemove("visibility", v)}
 				>
-					{statusIcons[status]}
-					<span className="capitalize">{status}</span>
+					{visibilityIcons[v]}
+					<span className="capitalize">{v}</span>
 				</Badge>
 			))}
 			{priorities.map((priority) => (

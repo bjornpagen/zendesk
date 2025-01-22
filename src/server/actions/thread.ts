@@ -262,3 +262,38 @@ async function sendEmailReply({
 		throw new Error("Failed to send email response")
 	}
 }
+
+/**
+ * Update thread properties (status, priority, or problem)
+ */
+export async function updateThreadProperty(
+	threadId: string,
+	property: "status" | "priority" | "problemId",
+	value: string
+) {
+	const { userId: clerkId } = await auth()
+	if (!clerkId) {
+		throw new Error("Unauthorized")
+	}
+
+	const updatedThread = await db
+		.update(schema.threads)
+		.set({
+			[property]: value,
+			lastReadAt: new Date() // Update read timestamp
+		})
+		.where(eq(schema.threads.id, threadId))
+		.returning({
+			id: schema.threads.id,
+			status: schema.threads.status,
+			priority: schema.threads.priority,
+			problemId: schema.threads.problemId
+		})
+		.then(([thread]) => thread)
+
+	if (!updatedThread) {
+		throw new Error("Failed to update thread")
+	}
+
+	return updatedThread
+}

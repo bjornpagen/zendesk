@@ -1,5 +1,5 @@
 import { MessageSquare, ListTodo, Users } from "lucide-react"
-
+import Link from "next/link"
 import {
 	Sidebar as ShadcnSidebar,
 	SidebarContent,
@@ -15,7 +15,7 @@ import {
 const items = [
 	{
 		title: "Messages",
-		url: "/messages",
+		url: "/messages?status=open&needsResponse=true",
 		icon: MessageSquare
 	},
 	{
@@ -41,10 +41,10 @@ export function Sidebar() {
 							{items.map((item) => (
 								<SidebarMenuItem key={item.title}>
 									<SidebarMenuButton asChild>
-										<a href={item.url}>
+										<Link href={item.url}>
 											<item.icon />
 											<span>{item.title}</span>
-										</a>
+										</Link>
 									</SidebarMenuButton>
 								</SidebarMenuItem>
 							))}
