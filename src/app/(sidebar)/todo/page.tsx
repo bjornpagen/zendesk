@@ -25,39 +25,27 @@ export default function TodoPage() {
 			priority: "high"
 		},
 		{
-			title: "Customer Information Management",
-			description:
-				"Add customer information tab to sidebar for managing customer profiles, contact details, and interaction history",
-			priority: "high"
-		},
-		{
 			title: "Support Organizations",
 			description:
 				"Add support for organizations to the app, allowing users to manage multiple teams within a single account",
 			priority: "high"
 		},
 		{
-			title: "Parse Inbound Emails: AI",
-			description:
-				"Implement email parsing system to clean and format top-posted email replies for better readability in threads",
-			priority: "medium"
-		},
-		{
-			title: "Problem Categories System: AI",
-			description:
-				"Implement problem category management, routing rules, and analytics",
-			priority: "medium"
-		},
-		{
-			title: "Assignment System: AI",
-			description:
-				"Build auto-assignment logic with load balancing and rotation features",
-			priority: "medium"
-		},
-		{
 			title: "Support Multiple File Attachments",
 			description:
 				"Update messages schema and UI to allow multiple file attachments per message",
+			priority: "high"
+		},
+		{
+			title: "Real-time Notifications",
+			description:
+				"Implement Supabase webhook and SSE integration for real-time updates and notifications across the application",
+			priority: "high"
+		},
+		{
+			title: "Customer Information Management",
+			description:
+				"Add customer information tab to sidebar for managing customer profiles, contact details, and interaction history",
 			priority: "medium"
 		},
 		{
@@ -70,11 +58,24 @@ export default function TodoPage() {
 			title: "Analytics Dashboard",
 			description:
 				"Add simple metrics page showing response times and ticket statistics",
-			priority: "medium"
+			priority: "low"
 		},
 		{
-			title: "Notifications Panel",
-			description: "Implement basic notification system for updates",
+			title: "Parse Inbound Emails: AI",
+			description:
+				"Implement email parsing system to clean and format top-posted email replies for better readability in threads",
+			priority: "low"
+		},
+		{
+			title: "Problem Categories System: AI",
+			description:
+				"Implement problem category management, routing rules, and analytics",
+			priority: "low"
+		},
+		{
+			title: "Assignment System: AI",
+			description:
+				"Build auto-assignment logic with load balancing and rotation features",
 			priority: "low"
 		}
 	] as Todo[]
