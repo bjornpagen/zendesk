@@ -25,12 +25,6 @@ export default function TodoPage() {
 			priority: "high"
 		},
 		{
-			title: "Convert Widget to iframe",
-			description:
-				"Transform the current widget implementation into an iframe-based solution for better isolation and compatibility",
-			priority: "high"
-		},
-		{
 			title: "Fix Read/Unread Filters",
 			description:
 				"Fix the read/unread filters so that they work correctly and are consistent with the messages page",
@@ -83,6 +77,12 @@ export default function TodoPage() {
 			description:
 				"Add simple metrics page showing response times and ticket statistics",
 			priority: "medium"
+		},
+		{
+			title: "Convert Widget to iframe",
+			description:
+				"Transform the current widget implementation into an iframe-based solution for better isolation and compatibility",
+			priority: "low"
 		},
 		{
 			title: "Notifications Panel",
