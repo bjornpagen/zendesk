@@ -102,8 +102,7 @@ export default function Thread() {
 			// Refresh the thread data to show the new message
 			await mutate()
 		} catch (error) {
-			console.error("Failed to send message:", error)
-			// You might want to add some error handling UI here
+			throw new Error("Failed to send message")
 		}
 	}
 

@@ -58,7 +58,7 @@ export function Widget() {
 			await mutateActiveThread()
 			await mutateThreads()
 		} catch (error) {
-			console.error("Failed to send message:", error)
+			throw new Error("Failed to send message")
 		}
 	}
 

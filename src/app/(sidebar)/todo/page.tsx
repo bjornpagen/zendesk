@@ -19,6 +19,18 @@ interface Todo {
 export default function TodoPage() {
 	const todos = [
 		{
+			title: "Postmark Email Integration",
+			description:
+				"Implement email sending and receiving functionality using Postmark for seamless email communication",
+			priority: "high"
+		},
+		{
+			title: "Convert Widget to iframe",
+			description:
+				"Transform the current widget implementation into an iframe-based solution for better isolation and compatibility",
+			priority: "high"
+		},
+		{
 			title: "Fix Read/Unread Filters",
 			description:
 				"Fix the read/unread filters so that they work correctly and are consistent with the messages page",
@@ -29,6 +41,30 @@ export default function TodoPage() {
 			description:
 				"Add support for organizations to the app, allowing users to manage multiple teams within a single account",
 			priority: "high"
+		},
+		{
+			title: "File Attachment System",
+			description:
+				"Implement complete file upload, storage, preview and download functionality with S3 integration",
+			priority: "high"
+		},
+		{
+			title: "Team Management Features",
+			description:
+				"Add role management, assignment tracking, and admin controls for teams",
+			priority: "high"
+		},
+		{
+			title: "Problem Categories System",
+			description:
+				"Implement problem category management, routing rules, and analytics",
+			priority: "medium"
+		},
+		{
+			title: "Assignment System",
+			description:
+				"Build auto-assignment logic with load balancing and rotation features",
+			priority: "medium"
 		},
 		{
 			title: "Support Multiple File Attachments",

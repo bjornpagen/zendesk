@@ -21,6 +21,7 @@ function randomItem<T>(array: T[]): T {
 }
 
 async function main() {
+	// biome-ignore lint/suspicious/noConsole: Acceptable in seed script for progress tracking
 	console.log("Cleaning up existing data...")
 	// Delete in reverse order of dependencies to avoid foreign key conflicts
 	await db.delete(schema.messages)
@@ -32,7 +33,7 @@ async function main() {
 	await db.delete(schema.users)
 	await db.delete(schema.teams)
 
-	// Create default team first
+	// biome-ignore lint/suspicious/noConsole: Acceptable in seed script for progress tracking
 	console.log("Creating default team...")
 	const defaultTeam = await db
 		.insert(schema.teams)
@@ -47,6 +48,7 @@ async function main() {
 			return team
 		})
 
+	// biome-ignore lint/suspicious/noConsole: Acceptable in seed script for progress tracking
 	console.log("Seeding additional teams...")
 	const teamCount = 4 // One less since we already created the default team
 	const additionalTeams = await db
@@ -60,6 +62,7 @@ async function main() {
 
 	const createdTeams = [defaultTeam, ...additionalTeams]
 
+	// biome-ignore lint/suspicious/noConsole: Acceptable in seed script for progress tracking
 	console.log("Seeding users...")
 	const userCount = 10
 	const createdUsers = await db

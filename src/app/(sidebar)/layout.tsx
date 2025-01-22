@@ -11,7 +11,7 @@ export default async function Layout({
 }) {
 	// Sync user data on each page load
 	await syncUser().catch((error) => {
-		console.error("Failed to sync user:", error)
+		throw new Error(`Failed to sync user data: ${error.message}`)
 	})
 
 	return (
