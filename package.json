@@ -35,6 +35,7 @@
 		"clsx": "^2.1.1",
 		"cmdk": "1.0.0",
 		"drizzle-orm": "^0.33.0",
+		"framer-motion": "^12.0.1",
 		"lucide-react": "^0.473.0",
 		"next": "^15.1.4",
 		"openai": "^4.78.1",
