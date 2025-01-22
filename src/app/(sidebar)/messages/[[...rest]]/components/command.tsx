@@ -254,6 +254,32 @@ export function MessagesCommand({
 				onValueChange={setSearchText}
 			/>
 			<CommandList>
+				<CommandGroup heading="Filter Visibility" className="p-2">
+					<CommandItem onSelect={() => toggleVisibility("read")}>
+						<Eye className="mr-2 h-4 w-4" />
+						<span>Read</span>
+						<span className={invisibleStyle}>visibility:read</span>
+					</CommandItem>
+					<CommandItem onSelect={() => toggleVisibility("unread")}>
+						<EyeOff className="mr-2 h-4 w-4" />
+						<span>Unread</span>
+						<span className={invisibleStyle}>visibility:unread</span>
+					</CommandItem>
+				</CommandGroup>
+				<CommandSeparator />
+				<CommandGroup heading="Filter Response Status" className="p-2">
+					<CommandItem onSelect={() => toggleNeedsResponse("true")}>
+						<MessageCircle className="mr-2 h-4 w-4" />
+						<span>Needs Response</span>
+						<span className={invisibleStyle}>needsResponse:true</span>
+					</CommandItem>
+					<CommandItem onSelect={() => toggleNeedsResponse("false")}>
+						<MessageCircleOff className="mr-2 h-4 w-4" />
+						<span>Responded</span>
+						<span className={invisibleStyle}>needsResponse:false</span>
+					</CommandItem>
+				</CommandGroup>
+				<CommandSeparator />
 				<CommandGroup heading="Filter Status" className="p-2">
 					<CommandItem onSelect={() => toggleStatus("open")}>
 						<Mail className="mr-2 h-4 w-4" />
@@ -272,16 +298,16 @@ export function MessagesCommand({
 					</CommandItem>
 				</CommandGroup>
 				<CommandSeparator />
-				<CommandGroup heading="Filter Visibility" className="p-2">
-					<CommandItem onSelect={() => toggleVisibility("read")}>
-						<Eye className="mr-2 h-4 w-4" />
-						<span>Read</span>
-						<span className={invisibleStyle}>visibility:read</span>
+				<CommandGroup heading="Filter Priority" className="p-2">
+					<CommandItem onSelect={() => togglePriority("urgent")}>
+						<AlertCircle className="mr-2 h-4 w-4" />
+						<span>Urgent</span>
+						<span className={invisibleStyle}>priority:urgent</span>
 					</CommandItem>
-					<CommandItem onSelect={() => toggleVisibility("unread")}>
-						<EyeOff className="mr-2 h-4 w-4" />
-						<span>Unread</span>
-						<span className={invisibleStyle}>visibility:unread</span>
+					<CommandItem onSelect={() => togglePriority("non-urgent")}>
+						<Clock className="mr-2 h-4 w-4" />
+						<span>Non-Urgent</span>
+						<span className={invisibleStyle}>priority:non-urgent</span>
 					</CommandItem>
 				</CommandGroup>
 				<CommandSeparator />
@@ -296,32 +322,6 @@ export function MessagesCommand({
 							<span className={invisibleStyle}>problem:{problem.title}</span>
 						</CommandItem>
 					))}
-				</CommandGroup>
-				<CommandSeparator />
-				<CommandGroup heading="Filter Priority" className="p-2">
-					<CommandItem onSelect={() => togglePriority("urgent")}>
-						<AlertCircle className="mr-2 h-4 w-4" />
-						<span>Urgent</span>
-						<span className={invisibleStyle}>priority:urgent</span>
-					</CommandItem>
-					<CommandItem onSelect={() => togglePriority("non-urgent")}>
-						<Clock className="mr-2 h-4 w-4" />
-						<span>Non-Urgent</span>
-						<span className={invisibleStyle}>priority:non-urgent</span>
-					</CommandItem>
-				</CommandGroup>
-				<CommandSeparator />
-				<CommandGroup heading="Filter Response Status" className="p-2">
-					<CommandItem onSelect={() => toggleNeedsResponse("true")}>
-						<MessageCircle className="mr-2 h-4 w-4" />
-						<span>Needs Response</span>
-						<span className={invisibleStyle}>needsResponse:true</span>
-					</CommandItem>
-					<CommandItem onSelect={() => toggleNeedsResponse("false")}>
-						<MessageCircleOff className="mr-2 h-4 w-4" />
-						<span>Responded</span>
-						<span className={invisibleStyle}>needsResponse:false</span>
-					</CommandItem>
 				</CommandGroup>
 				<CommandSeparator />
 				<CommandGroup heading="Search" className="p-2">

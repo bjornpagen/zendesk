@@ -83,44 +83,6 @@ export function MessagesSelectedFilters({
 
 	return (
 		<div className="flex flex-wrap gap-2 mb-4">
-			{statuses.map((status) => (
-				<Badge
-					key={status}
-					variant="secondary"
-					className="flex items-center cursor-pointer"
-					onClick={() => onFilterRemove("status", status)}
-				>
-					{statusIcons[status]}
-					<span className="capitalize">{status}</span>
-				</Badge>
-			))}
-			{problems.map((problem) => (
-				<Badge
-					key={problem}
-					variant="secondary"
-					className="flex items-center cursor-pointer"
-					onClick={() => onFilterRemove("problem", problem)}
-				>
-					<Hash className="h-4 w-4 mr-2" />
-					<span>
-						{problem
-							.split("-")
-							.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-							.join(" ")}
-					</span>
-				</Badge>
-			))}
-			{priorities.map((priority) => (
-				<Badge
-					key={priority}
-					variant="secondary"
-					className="flex items-center cursor-pointer"
-					onClick={() => onFilterRemove("priority", priority)}
-				>
-					{priorityIcons[priority]}
-					<span className="capitalize">{priority}</span>
-				</Badge>
-			))}
 			{visibility.map((v) => (
 				<Badge
 					key={v}
@@ -141,6 +103,44 @@ export function MessagesSelectedFilters({
 				>
 					{responseIcons[value]}
 					<span>{responseLabels[value]}</span>
+				</Badge>
+			))}
+			{statuses.map((status) => (
+				<Badge
+					key={status}
+					variant="secondary"
+					className="flex items-center cursor-pointer"
+					onClick={() => onFilterRemove("status", status)}
+				>
+					{statusIcons[status]}
+					<span className="capitalize">{status}</span>
+				</Badge>
+			))}
+			{priorities.map((priority) => (
+				<Badge
+					key={priority}
+					variant="secondary"
+					className="flex items-center cursor-pointer"
+					onClick={() => onFilterRemove("priority", priority)}
+				>
+					{priorityIcons[priority]}
+					<span className="capitalize">{priority}</span>
+				</Badge>
+			))}
+			{problems.map((problem) => (
+				<Badge
+					key={problem}
+					variant="secondary"
+					className="flex items-center cursor-pointer"
+					onClick={() => onFilterRemove("problem", problem)}
+				>
+					<Hash className="h-4 w-4 mr-2" />
+					<span>
+						{problem
+							.split("-")
+							.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+							.join(" ")}
+					</span>
 				</Badge>
 			))}
 			{intext && (
