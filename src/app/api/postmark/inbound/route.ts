@@ -30,30 +30,6 @@ export async function POST(request: NextRequest) {
 		const fromName = payload.FromFull.Name || fromEmail.split("@")[0] || ""
 		console.log("👤 Processing customer data:", { fromEmail, fromName })
 
-		// 1. Find or create customer using upsert
-		console.log("💾 Attempting to upsert customer...")
-		const customer = await db
-			.insert(schema.customers)
-			.values({
-				email: fromEmail,
-				name: fromName
-			})
-			.onConflictDoUpdate({
-				target: schema.customers.email,
-				set: { name: fromName }
-			})
-			.returning({
-				id: schema.customers.id,
-				email: schema.customers.email
-			})
-			.then(([customer]) => customer)
-		console.log("✅ Customer upsert result:", customer)
-
-		if (!customer) {
-			console.error("❌ Customer upsert failed!")
-			throw new Error("Failed to create/update customer")
-		}
-
 		// 2. Find or create thread
 		let threadId: string | undefined
 		console.log("🔍 Looking for In-Reply-To in headers")
@@ -62,83 +38,93 @@ export async function POST(request: NextRequest) {
 		)?.Value
 		console.log("📝 Found In-Reply-To:", inReplyTo)
 
-		if (inReplyTo) {
-			console.log("🔎 Searching for existing thread with messageId:", inReplyTo)
-			// Look for a message with this RFC messageId and get its threadId
-			threadId = await db
-				.select({ threadId: schema.messages.threadId })
-				.from(schema.messages)
-				.where(eq(schema.messages.messageId, inReplyTo))
-				.limit(1)
-				.then(([message]) => message?.threadId)
-			console.log("🧵 Found existing threadId:", threadId)
-		}
-
-		if (!threadId) {
-			console.log("📝 Creating new thread...")
-			const thread = await db
-				.insert(schema.threads)
+		// Start transaction
+		const result = await db.transaction(async (tx) => {
+			// 1. Find or create customer using upsert
+			console.log("💾 Attempting to upsert customer...")
+			const customer = await tx
+				.insert(schema.customers)
 				.values({
-					customerId: customer.id,
-					subject: payload.Subject || "",
-					status: "open",
-					priority: "non-urgent"
+					email: fromEmail,
+					name: fromName
+				})
+				.onConflictDoUpdate({
+					target: schema.customers.email,
+					set: { name: fromName }
 				})
 				.returning({
-					id: schema.threads.id
+					id: schema.customers.id,
+					email: schema.customers.email
 				})
-				.then(([thread]) => thread)
-			console.log("✅ New thread created:", thread)
+				.then(([customer]) => customer)
 
-			if (!thread) {
-				console.error("❌ Thread creation failed!")
-				throw new Error("Failed to create thread")
+			if (!customer) {
+				throw new Error("Failed to create/update customer")
 			}
-			threadId = thread.id
-		}
 
-		// 3. Create message
-		console.log("💬 Creating new message...", {
-			type: "email",
-			customerId: customer.id,
-			threadId: threadId,
-			messageId: rfcMessageId,
-			inReplyTo: inReplyTo,
-			contentLength: (payload.StrippedTextReply || payload.TextBody || "")
-				.length
+			// Find thread ID if it exists
+			if (inReplyTo) {
+				threadId = await tx
+					.select({ threadId: schema.messages.threadId })
+					.from(schema.messages)
+					.where(eq(schema.messages.messageId, inReplyTo))
+					.limit(1)
+					.then(([message]) => message?.threadId)
+			}
+
+			// Create new thread if needed
+			if (!threadId) {
+				const thread = await tx
+					.insert(schema.threads)
+					.values({
+						customerId: customer.id,
+						subject: payload.Subject || "",
+						status: "open",
+						priority: "non-urgent"
+					})
+					.returning({
+						id: schema.threads.id
+					})
+					.then(([thread]) => thread)
+
+				if (!thread) {
+					throw new Error("Failed to create thread")
+				}
+				threadId = thread.id
+			}
+
+			// Create message
+			const message = await tx
+				.insert(schema.messages)
+				.values({
+					type: "email",
+					customerId: customer.id,
+					threadId: threadId,
+					messageId: rfcMessageId,
+					inReplyTo: inReplyTo,
+					content: payload.StrippedTextReply || payload.TextBody || ""
+				})
+				.returning({
+					id: schema.messages.id
+				})
+				.then(([message]) => message)
+
+			if (!message) {
+				throw new Error("Failed to create message")
+			}
+
+			return { customer, threadId, message }
 		})
 
-		const message = await db
-			.insert(schema.messages)
-			.values({
-				type: "email",
-				customerId: customer.id,
-				threadId: threadId,
-				messageId: rfcMessageId,
-				inReplyTo: inReplyTo,
-				content: payload.StrippedTextReply || payload.TextBody || ""
-			})
-			.returning({
-				id: schema.messages.id
-			})
-			.then(([message]) => message)
-
-		console.log("✅ New message created:", message)
-
-		if (!message) {
-			console.error("❌ Message creation failed!")
-			throw new Error("Failed to create message")
-		}
-
 		console.log("🎉 Successfully processed email:", {
-			customerId: customer.id,
-			threadId,
-			messageId: message.id,
+			customerId: result.customer.id,
+			threadId: result.threadId,
+			messageId: result.message.id,
 			rfcMessageId
 		})
 
 		return new Response(
-			JSON.stringify({ success: true, messageId: message.id }),
+			JSON.stringify({ success: true, messageId: result.message.id }),
 			{
 				status: 200,
 				headers: { "Content-Type": "application/json" }
