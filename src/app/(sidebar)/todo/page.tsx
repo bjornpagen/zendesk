@@ -19,31 +19,37 @@ interface Todo {
 export default function TodoPage() {
 	const todos = [
 		{
+			title: "Team User Management",
+			description:
+				"Implement functionality to add and remove users from teams, including role assignment and permissions management",
+			priority: "high"
+		},
+		{
+			title: "Customer Information Management",
+			description:
+				"Add customer information tab to sidebar for managing customer profiles, contact details, and interaction history",
+			priority: "high"
+		},
+		{
 			title: "Support Organizations",
 			description:
 				"Add support for organizations to the app, allowing users to manage multiple teams within a single account",
 			priority: "high"
 		},
 		{
-			title: "Team User Management",
-			description:
-				"Implement functionality to add and remove users from teams, including role assignment and permissions management",
-			priority: "medium"
-		},
-		{
-			title: "Parse Inbound Emails",
+			title: "Parse Inbound Emails: AI",
 			description:
 				"Implement email parsing system to clean and format top-posted email replies for better readability in threads",
 			priority: "medium"
 		},
 		{
-			title: "Problem Categories System",
+			title: "Problem Categories System: AI",
 			description:
 				"Implement problem category management, routing rules, and analytics",
 			priority: "medium"
 		},
 		{
-			title: "Assignment System",
+			title: "Assignment System: AI",
 			description:
 				"Build auto-assignment logic with load balancing and rotation features",
 			priority: "medium"
