@@ -3,10 +3,8 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Search, UserPlus, UserMinus } from "lucide-react"
-import Masonry from "react-masonry-css"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { formatDate } from "@/lib/format"
-import { MASONRY_BREAKPOINTS } from "@/lib/constants"
 import { useTeamFilters } from "@/hooks/use-team-filters"
 import { useMemo, useState } from "react"
 import type { TeamMemberUpdate } from "@/types/frontend"
@@ -135,15 +133,11 @@ export default function Teams() {
 							</div>
 						</div>
 
-						<Masonry
-							breakpointCols={MASONRY_BREAKPOINTS}
-							className="flex w-auto -ml-4"
-							columnClassName="pl-4 bg-clip-padding"
-						>
+						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
 							{members.map((member) => (
 								<Card
 									key={member.id}
-									className="mb-4 cursor-pointer hover:shadow-md transition-shadow"
+									className="cursor-pointer hover:shadow-md transition-shadow"
 								>
 									<CardContent className="flex flex-col p-4 space-y-3">
 										<div className="flex items-start gap-4">
@@ -173,7 +167,7 @@ export default function Teams() {
 									</CardContent>
 								</Card>
 							))}
-						</Masonry>
+						</div>
 					</div>
 				))}
 			</div>

@@ -25,6 +25,12 @@ export default function TodoPage() {
 			priority: "high"
 		},
 		{
+			title: "Team User Management",
+			description:
+				"Implement functionality to add and remove users from teams, including role assignment and permissions management",
+			priority: "medium"
+		},
+		{
 			title: "File Attachment System",
 			description:
 				"Implement complete file upload, storage, preview and download functionality with S3 integration",
