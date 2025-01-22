@@ -70,26 +70,31 @@ export async function getThreads(
 	 * FROM messages
 	 * WHERE messages.threadId = threads.id
 	 */
-	const lastMessageTimeSubselect = db
-		.select({
-			lastMessageTime: max(messages.createdAt).as("lastMessageTime")
-		})
-		.from(messages)
-		.where(eq(messages.threadId, threads.id))
-		.as("lastMessageTimeSubselect")
+	const lastMessageTimeSubselect = db.$with("last_message_time").as(
+		db
+			.select({
+				threadId: messages.threadId,
+				lastMessageTime: max(messages.createdAt).as("lastMessageTime")
+			})
+			.from(messages)
+			.groupBy(messages.threadId)
+	)
 
 	// For "read" => thread.lastReadAt >= the last message creation time
 	// For "unread" => thread.lastReadAt < the last message creation time OR thread.lastReadAt is null
 	let lastReadAtCondition: SQL<unknown> | undefined
 	if (wantsRead && !wantsUnread) {
-		lastReadAtCondition = gte(
-			threads.lastReadAt,
-			lastMessageTimeSubselect.lastMessageTime
+		lastReadAtCondition = and(
+			eq(lastMessageTimeSubselect.threadId, threads.id),
+			gte(threads.lastReadAt, lastMessageTimeSubselect.lastMessageTime)
 		)
 	} else if (!wantsRead && wantsUnread) {
-		lastReadAtCondition = or(
-			isNull(threads.lastReadAt),
-			lt(threads.lastReadAt, lastMessageTimeSubselect.lastMessageTime)
+		lastReadAtCondition = and(
+			eq(lastMessageTimeSubselect.threadId, threads.id),
+			or(
+				isNull(threads.lastReadAt),
+				lt(threads.lastReadAt, lastMessageTimeSubselect.lastMessageTime)
+			)
 		)
 	}
 	if (lastReadAtCondition) {
@@ -110,10 +115,15 @@ export async function getThreads(
 
 	// First query for distinct thread IDs that match our conditions
 	const threadIdsQuery = await db
+		.with(lastMessageTimeSubselect)
 		.selectDistinct({ threadId: threads.id })
 		.from(threads)
 		.innerJoin(customers, eq(threads.customerId, customers.id))
 		.leftJoin(messages, eq(threads.id, messages.threadId))
+		.leftJoin(
+			lastMessageTimeSubselect,
+			eq(threads.id, lastMessageTimeSubselect.threadId)
+		)
 		.where(conditions.length > 0 ? and(...conditions) : undefined)
 
 	const threadIds = threadIdsQuery.map((row) => row.threadId)

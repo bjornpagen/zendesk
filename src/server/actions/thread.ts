@@ -20,50 +20,63 @@ export async function getThread(threadId: string) {
 		throw new Error("Unauthorized")
 	}
 
-	const thread = await db.query.threads.findFirst({
-		where: eq(schema.threads.id, threadId),
-		columns: {
-			id: true,
-			subject: true,
-			status: true,
-			priority: true
-		},
-		with: {
-			problem: {
-				columns: {
-					title: true
-				}
+	// Wrap in transaction to update lastReadAt atomically with fetch
+	const thread = await db.transaction(async (tx) => {
+		// Update lastReadAt
+		await tx
+			.update(schema.threads)
+			.set({ lastReadAt: new Date() })
+			.where(eq(schema.threads.id, threadId))
+
+		// Fetch thread data
+		const thread = await tx.query.threads.findFirst({
+			where: eq(schema.threads.id, threadId),
+			columns: {
+				id: true,
+				subject: true,
+				status: true,
+				priority: true
 			},
-			messages: {
-				orderBy: [asc(schema.messages.createdAt)],
-				columns: {
-					id: true,
-					content: true,
-					createdAt: true,
-					type: true,
-					userClerkId: true,
-					messageId: true,
-					inReplyTo: true
+			with: {
+				problem: {
+					columns: {
+						title: true
+					}
 				},
-				with: {
-					user: {
-						columns: {
-							name: true,
-							avatar: true
-						}
+				messages: {
+					orderBy: [asc(schema.messages.createdAt)],
+					columns: {
+						id: true,
+						content: true,
+						createdAt: true,
+						type: true,
+						userClerkId: true,
+						messageId: true,
+						inReplyTo: true
 					},
-					customer: {
-						columns: {
-							name: true
+					with: {
+						user: {
+							columns: {
+								name: true,
+								avatar: true
+							}
+						},
+						customer: {
+							columns: {
+								name: true
+							}
 						}
 					}
 				}
 			}
+		})
+
+		if (!thread) {
+			throw new Error("Thread not found")
 		}
+
+		return thread
 	})
-	if (!thread) {
-		throw new Error("Thread not found")
-	}
 
 	return thread
 }
