@@ -121,11 +121,20 @@ export function Widget() {
 						<>
 							<ScrollArea className="flex-1 p-4">
 								<div className="space-y-4 flex flex-col-reverse">
-									{activeThreadData?.messages.map((msg) => (
+									{activeThreadData?.messages.map((msg, index) => (
 										<div
 											key={msg.id}
 											className={`flex gap-3 ${
 												isUserMessage(msg.type) ? "flex-row-reverse" : ""
+											} ${
+												index > 0 &&
+												isUserMessage(msg.type) ===
+													isUserMessage(
+														// biome-ignore lint/style/noNonNullAssertion: We know the previous message exists since index > 0
+														activeThreadData.messages[index - 1]!.type
+													)
+													? "mt-2"
+													: "mt-4"
 											}`}
 										>
 											<Avatar className="h-8 w-8">
