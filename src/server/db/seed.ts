@@ -50,7 +50,7 @@ async function main() {
 
 	// biome-ignore lint/suspicious/noConsole: Acceptable in seed script for progress tracking
 	console.log("Seeding additional teams...")
-	const teamCount = 4 // One less since we already created the default team
+	const teamCount = 16 // Changed from 4
 	const additionalTeams = await db
 		.insert(schema.teams)
 		.values(
@@ -64,7 +64,7 @@ async function main() {
 
 	// biome-ignore lint/suspicious/noConsole: Acceptable in seed script for progress tracking
 	console.log("Seeding users...")
-	const userCount = 10
+	const userCount = 40 // Changed from 10
 	const createdUsers = await db
 		.insert(schema.users)
 		.values(
@@ -81,7 +81,7 @@ async function main() {
 
 	// biome-ignore lint/suspicious/noConsole: Acceptable in seed script for progress tracking
 	console.log("Seeding customers...")
-	const customerCount = 10
+	const customerCount = 40 // Changed from 10
 	const createdCustomers = await db
 		.insert(schema.customers)
 		.values(
@@ -94,7 +94,7 @@ async function main() {
 
 	// biome-ignore lint/suspicious/noConsole: Acceptable in seed script for progress tracking
 	console.log("Seeding problems...")
-	const problemCount = 5
+	const problemCount = 20 // Changed from 5
 	const createdProblems = await db
 		.insert(schema.problems)
 		.values(
@@ -107,7 +107,7 @@ async function main() {
 
 	// biome-ignore lint/suspicious/noConsole: Acceptable in seed script for progress tracking
 	console.log("Seeding threads...")
-	const threadCount = 15
+	const threadCount = 60 // Changed from 15
 	const createdThreads = await db
 		.insert(schema.threads)
 		.values(
@@ -135,15 +135,15 @@ async function main() {
 
 	// biome-ignore lint/suspicious/noConsole: Acceptable in seed script for progress tracking
 	console.log("Seeding files...")
-	const fileCount = 5
+	const fileCount = 20 // Changed from 5
 	const createdFiles = await db
 		.insert(schema.files)
 		.values(
 			Array.from({ length: fileCount }).map(() => ({
-				name: faker.system.fileName(),
-				size: faker.number.int({ min: 100, max: 2000 }),
-				type: faker.system.mimeType(),
-				url: faker.internet.url()
+				name: `${faker.word.sample()}.webp`,
+				size: faker.number.int({ min: 20_000, max: 500_000 }), // 20KB - 500KB (WebP is typically smaller)
+				type: "image/webp",
+				url: `https://picsum.photos/${faker.number.int({ min: 200, max: 800 })}/${faker.number.int({ min: 200, max: 800 })}?format=webp` // Explicitly request WebP format
 			}))
 		)
 		.returning()
@@ -155,51 +155,53 @@ async function main() {
 	const emailMessages: Array<typeof schema.messages.$inferInsert> = []
 
 	for (const thread of createdThreads) {
-		const randomFileId = faker.datatype.boolean()
-			? randomItem(createdFiles).id
-			: null
+		for (let i = 0; i < 4; i++) {
+			const randomFileId = faker.datatype.boolean()
+				? randomItem(createdFiles).id
+				: null
 
-		// Create messages with random timestamps in the past 30 days
-		const timestamp = faker.date.recent({ days: 30 })
+			// Create messages with random timestamps in the past 30 days
+			const timestamp = faker.date.recent({ days: 30 })
 
-		staffMessages.push({
-			type: "staff",
-			threadId: thread.id,
-			userClerkId: randomItem(createdUsers).clerkId,
-			customerId: null,
-			fileId: randomFileId,
-			messageId: null,
-			inReplyTo: null,
-			content: faker.lorem.paragraph(),
-			createdAt: timestamp,
-			updatedAt: timestamp
-		})
+			staffMessages.push({
+				type: "staff",
+				threadId: thread.id,
+				userClerkId: randomItem(createdUsers).clerkId,
+				customerId: null,
+				fileId: randomFileId,
+				messageId: null,
+				inReplyTo: null,
+				content: faker.lorem.paragraph(),
+				createdAt: timestamp,
+				updatedAt: timestamp
+			})
 
-		widgetMessages.push({
-			type: "widget",
-			threadId: thread.id,
-			userClerkId: null,
-			customerId: thread.customerId,
-			fileId: faker.datatype.boolean() ? randomItem(createdFiles).id : null,
-			messageId: null,
-			inReplyTo: null,
-			content: faker.lorem.paragraph(),
-			createdAt: faker.date.recent({ days: 30 }),
-			updatedAt: faker.date.recent({ days: 30 })
-		})
+			widgetMessages.push({
+				type: "widget",
+				threadId: thread.id,
+				userClerkId: null,
+				customerId: thread.customerId,
+				fileId: faker.datatype.boolean() ? randomItem(createdFiles).id : null,
+				messageId: null,
+				inReplyTo: null,
+				content: faker.lorem.paragraph(),
+				createdAt: faker.date.recent({ days: 30 }),
+				updatedAt: faker.date.recent({ days: 30 })
+			})
 
-		emailMessages.push({
-			type: "email",
-			threadId: thread.id,
-			userClerkId: null,
-			customerId: thread.customerId,
-			fileId: faker.datatype.boolean() ? randomItem(createdFiles).id : null,
-			messageId: faker.string.uuid(),
-			inReplyTo: faker.datatype.boolean() ? faker.string.uuid() : null,
-			content: faker.lorem.paragraph(),
-			createdAt: faker.date.recent({ days: 30 }),
-			updatedAt: faker.date.recent({ days: 30 })
-		})
+			emailMessages.push({
+				type: "email",
+				threadId: thread.id,
+				userClerkId: null,
+				customerId: thread.customerId,
+				fileId: faker.datatype.boolean() ? randomItem(createdFiles).id : null,
+				messageId: faker.string.uuid(),
+				inReplyTo: faker.datatype.boolean() ? faker.string.uuid() : null,
+				content: faker.lorem.paragraph(),
+				createdAt: faker.date.recent({ days: 30 }),
+				updatedAt: faker.date.recent({ days: 30 })
+			})
+		}
 	}
 
 	await db

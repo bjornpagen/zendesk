@@ -222,5 +222,9 @@ export const messagesRelations = relations(messages, ({ one }) => ({
 	customer: one(customers, {
 		fields: [messages.customerId],
 		references: [customers.id]
+	}),
+	file: one(files, {
+		fields: [messages.fileId],
+		references: [files.id]
 	})
 }))

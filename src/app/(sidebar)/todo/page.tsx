@@ -37,12 +37,6 @@ export default function TodoPage() {
 			priority: "high"
 		},
 		{
-			title: "Team Management Features",
-			description:
-				"Add role management, assignment tracking, and admin controls for teams",
-			priority: "high"
-		},
-		{
 			title: "Problem Categories System",
 			description:
 				"Implement problem category management, routing rules, and analytics",

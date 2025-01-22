@@ -5,6 +5,15 @@
 import "./src/env.js"
 
 /** @type {import("next").NextConfig} */
-const config = {}
+const config = {
+	images: {
+		domains: ["picsum.photos", "s3.us-east-2.amazonaws.com"]
+	},
+	experimental: {
+		serverActions: {
+			bodySizeLimit: "5mb"
+		}
+	}
+}
 
 export default config

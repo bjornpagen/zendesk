@@ -3,7 +3,7 @@
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import useSWR from "swr"
-import { getThread, sendMessage } from "@/server/actions/thread"
+import { getThread, sendMessageForm } from "@/server/actions/thread"
 import {
 	Sheet,
 	SheetContent,
@@ -15,10 +15,12 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
-import { Paperclip, ArrowUp } from "lucide-react"
+import { Paperclip, ArrowUp, X } from "lucide-react"
 
 import { ChangeThreadPropertyDialog } from "./change-thread-property-dialog"
 import { formatDate } from "@/lib/format"
+
+import Image from "next/image"
 
 const getStatusVariant = (status: string) => {
 	switch (status) {
@@ -54,6 +56,7 @@ export default function Thread() {
 	const searchParams = useSearchParams()
 	const messageId = searchParams.get("message")
 	const [message, setMessage] = useState("")
+	const [file, setFile] = useState<File | null>(null)
 	const [highlightedMessageId, setHighlightedMessageId] = useState<
 		string | null
 	>(null)
@@ -77,7 +80,7 @@ export default function Thread() {
 					`message-${targetMessageId}`
 				)
 				if (targetElement) {
-					targetElement.scrollIntoView({ behavior: "smooth", block: "center" })
+					targetElement.scrollIntoView({ behavior: "smooth", block: "end" })
 				}
 
 				setTimeout(() => {
@@ -87,20 +90,58 @@ export default function Thread() {
 		}
 	}, [thread, messageId])
 
+	// Add this effect to scroll to bottom when messages change
+	useEffect(() => {
+		if (!thread?.messages?.length) {
+			return
+		}
+
+		const scrollArea = document.getElementById("message-scroll-area")
+		setTimeout(() => {
+			if (scrollArea) {
+				scrollArea.scrollTo({
+					top: scrollArea.scrollHeight,
+					behavior: "smooth"
+				})
+			}
+		}, 10)
+	}, [thread?.messages?.length])
+
 	const handleClose = () => {
 		router.back()
 	}
 
+	const handleFileChoose = (event: React.ChangeEvent<HTMLInputElement>) => {
+		if (event.target.files?.[0]) {
+			setFile(event.target.files[0])
+		}
+	}
+
 	const handleSend = async () => {
-		if (!message.trim() || !thread) {
+		if ((!message.trim() && !file) || !thread) {
 			return
 		}
 
 		try {
-			await sendMessage(thread.id, message.trim())
+			const formData = new FormData()
+			formData.append("content", message.trim())
+			formData.append("threadId", thread.id)
+			if (file) {
+				formData.append("file", file)
+			}
+
+			await sendMessageForm(formData)
 			setMessage("")
-			// Refresh the thread data to show the new message
+			setFile(null)
 			await mutate()
+
+			const scrollArea = document.getElementById("message-scroll-area")
+			if (scrollArea) {
+				scrollArea.scrollTo({
+					top: scrollArea.scrollHeight,
+					behavior: "smooth"
+				})
+			}
 		} catch (error) {
 			throw new Error("Failed to send message")
 		}
@@ -189,12 +230,49 @@ export default function Thread() {
 										{formatDate(message.createdAt)}
 									</p>
 									<p className="text-sm">{message.content}</p>
+									{message.file?.type.startsWith("image/") && (
+										<div className="mt-2 relative w-[200px]">
+											<Image
+												src={message.file.url}
+												alt={message.file.name}
+												width={200}
+												height={200}
+												className="rounded-md"
+											/>
+										</div>
+									)}
 								</div>
 							</div>
 						))}
 					</div>
 				</ScrollArea>
 				<div className="px-4 pb-4">
+					{file && (
+						<Badge
+							variant="secondary"
+							className="inline-flex items-center gap-1 mb-3 max-w-[300px] text-xs px-1.5 font-normal"
+						>
+							<Paperclip className="h-3 w-3 flex-shrink-0" />
+							<span className="truncate">{file.name}</span>
+							<Button
+								variant="ghost"
+								size="icon"
+								className="h-3 w-3 p-0 hover:bg-transparent flex-shrink-0"
+								onClick={() => {
+									setFile(null)
+									const fileInput = document.getElementById(
+										"fileInput"
+									) as HTMLInputElement
+									if (fileInput) {
+										fileInput.value = ""
+									}
+								}}
+							>
+								<X className="h-2.5 w-2.5" />
+								<span className="sr-only">Remove file</span>
+							</Button>
+						</Badge>
+					)}
 					<div className="relative">
 						<Textarea
 							value={message}
@@ -213,6 +291,7 @@ export default function Thread() {
 								size="icon"
 								variant="ghost"
 								className="h-6 w-6 text-muted-foreground hover:text-secondary-foreground"
+								onClick={() => document.getElementById("fileInput")?.click()}
 							>
 								<Paperclip className="h-4 w-4" />
 							</Button>
@@ -226,6 +305,12 @@ export default function Thread() {
 							</Button>
 						</div>
 					</div>
+					<input
+						id="fileInput"
+						type="file"
+						onChange={handleFileChoose}
+						className="hidden"
+					/>
 				</div>
 			</SheetContent>
 			<ChangeThreadPropertyDialog

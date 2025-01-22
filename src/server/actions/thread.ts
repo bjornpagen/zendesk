@@ -6,10 +6,18 @@ import { auth } from "@clerk/nextjs/server"
 import { asc, desc, eq } from "drizzle-orm"
 import { postmark } from "@/server/postmark"
 import { createId } from "@paralleldrive/cuid2"
+import { z } from "zod"
+import { uploadToS3 } from "@/server/s3"
 
 // TODO: Move to environment variables
 const WHITELISTED_DOMAIN = "gauntletai.com"
 const SUPPORT_EMAIL = "support@bjornpagen.com"
+
+// Add schema for form validation
+const MessageFormSchema = z.object({
+	content: z.string(),
+	threadId: z.string()
+})
 
 /**
  * Fetch a thread (plus related messages) by ID
@@ -50,7 +58,8 @@ export async function getThread(threadId: string) {
 					type: true,
 					userClerkId: true,
 					messageId: true,
-					inReplyTo: true
+					inReplyTo: true,
+					fileId: true
 				},
 				with: {
 					user: {
@@ -62,6 +71,13 @@ export async function getThread(threadId: string) {
 					customer: {
 						columns: {
 							name: true
+						}
+					},
+					file: {
+						columns: {
+							name: true,
+							url: true,
+							type: true
 						}
 					}
 				}
@@ -84,14 +100,46 @@ export async function getThread(threadId: string) {
  * This means there will always be at least one message in the thread with a messageId
  * that we can use for email threading (In-Reply-To header).
  */
-export async function sendMessage(threadId: string, content: string) {
-	console.log("🚀 Starting sendMessage", { threadId, content })
+async function sendMessage(threadId: string, content: string, file?: File) {
+	console.log("🚀 Starting sendMessage", { threadId, content, hasFile: !!file })
 	const { userId: clerkId } = await auth()
 	if (!clerkId) {
 		console.error("❌ No clerk ID found")
 		throw new Error("Unauthorized")
 	}
 	console.log("👤 Authenticated user:", { clerkId })
+
+	// Handle file upload if present
+	let fileId: string | undefined
+	if (file) {
+		try {
+			console.log("📁 Uploading file to S3...")
+			const fileUrl = await uploadToS3(file)
+
+			// Insert file record into database
+			const fileRecord = await db
+				.insert(schema.files)
+				.values({
+					name: file.name,
+					size: file.size,
+					type: file.type,
+					url: fileUrl
+				})
+				.returning({
+					id: schema.files.id
+				})
+				.then(([f]) => f)
+			if (!fileRecord) {
+				throw new Error("Failed to upload file")
+			}
+
+			fileId = fileRecord.id
+			console.log("✅ File uploaded and recorded:", { fileId, url: fileUrl })
+		} catch (error) {
+			console.error("❌ File upload failed:", error)
+			throw new Error("Failed to upload file")
+		}
+	}
 
 	// Retrieve thread & customer data
 	console.log("🔍 Fetching thread data...")
@@ -146,7 +194,8 @@ export async function sendMessage(threadId: string, content: string) {
 				threadId,
 				userClerkId: clerkId,
 				messageId: staffMessageId,
-				inReplyTo: inReplyToId
+				inReplyTo: inReplyToId,
+				fileId: fileId // Add the file ID if present
 			})
 			.returning({
 				id: schema.messages.id,
@@ -155,7 +204,8 @@ export async function sendMessage(threadId: string, content: string) {
 				type: schema.messages.type,
 				userClerkId: schema.messages.userClerkId,
 				messageId: schema.messages.messageId,
-				inReplyTo: schema.messages.inReplyTo
+				inReplyTo: schema.messages.inReplyTo,
+				fileId: schema.messages.fileId
 			})
 			.then(([m]) => m)
 
@@ -175,7 +225,8 @@ export async function sendMessage(threadId: string, content: string) {
 				textBody: content,
 				threadId: thread.id,
 				newMessageId: staffMessageId,
-				inReplyTo: inReplyToId
+				inReplyTo: inReplyToId,
+				fileId: fileId
 			})
 		}
 
@@ -202,7 +253,8 @@ async function sendEmailReply({
 	textBody,
 	threadId,
 	newMessageId,
-	inReplyTo
+	inReplyTo,
+	fileId
 }: {
 	to: string
 	subject: string
@@ -210,13 +262,15 @@ async function sendEmailReply({
 	threadId: string
 	newMessageId: string
 	inReplyTo: string | null
+	fileId?: string
 }) {
 	console.log("🚀 Starting sendEmailReply:", {
 		to,
 		subject,
 		threadId,
 		newMessageId,
-		inReplyTo
+		inReplyTo,
+		fileId
 	})
 
 	try {
@@ -243,14 +297,62 @@ async function sendEmailReply({
 		}
 
 		console.log("📨 Sending via Postmark with headers:", headers)
-		await postmark.sendEmail({
-			From: SUPPORT_EMAIL,
-			To: to,
-			Subject: emailSubject,
-			TextBody: textBody,
-			MessageStream: "outbound",
-			Headers: headers
-		})
+
+		// If there's a file, fetch it and add as attachment
+		if (fileId) {
+			console.log("📎 Fetching file data for attachment:", fileId)
+			const file = await db.query.files.findFirst({
+				where: eq(schema.files.id, fileId),
+				columns: {
+					name: true,
+					url: true,
+					type: true
+				}
+			})
+
+			if (file) {
+				// Fetch the file content from S3
+				const response = await fetch(file.url)
+				const arrayBuffer = await response.arrayBuffer()
+				// Convert ArrayBuffer to base64 string
+				const base64Content = btoa(
+					String.fromCharCode(...new Uint8Array(arrayBuffer))
+				)
+
+				headers.push(
+					{ Name: "Content-Type", Value: file.type },
+					{ Name: "Content-Transfer-Encoding", Value: "base64" }
+				)
+
+				await postmark.sendEmail({
+					From: SUPPORT_EMAIL,
+					To: to,
+					Subject: emailSubject,
+					TextBody: textBody,
+					MessageStream: "outbound",
+					Headers: headers,
+					Attachments: [
+						{
+							Name: file.name,
+							Content: base64Content,
+							ContentType: file.type,
+							ContentID: fileId
+						}
+					]
+				})
+				console.log("📎 Added attachment to email:", file.name)
+			}
+		} else {
+			await postmark.sendEmail({
+				From: SUPPORT_EMAIL,
+				To: to,
+				Subject: emailSubject,
+				TextBody: textBody,
+				MessageStream: "outbound",
+				Headers: headers
+			})
+		}
+
 		console.log("✅ Email sent successfully")
 	} catch (error) {
 		console.error("💥 Error in sendEmailReply:", error)
@@ -296,4 +398,37 @@ export async function updateThreadProperty(
 	}
 
 	return updatedThread
+}
+
+// New function to handle form submissions
+export async function sendMessageForm(formData: FormData) {
+	try {
+		// Validate the form data
+		const validation = MessageFormSchema.safeParse({
+			content: formData.get("content"),
+			threadId: formData.get("threadId")
+		})
+
+		if (!validation.success) {
+			console.error("Validation failed", validation.error)
+			throw new Error("Invalid input")
+		}
+
+		const { content, threadId } = validation.data
+
+		// Handle file upload if present
+		let file: File | undefined
+		const formFile = formData.get("file")
+		if (formFile && formFile instanceof File) {
+			file = formFile
+		}
+
+		// Create the message using existing function
+		await sendMessage(threadId, content, file)
+
+		return
+	} catch (error) {
+		console.error("Failed to send message:", error)
+		throw error
+	}
 }
