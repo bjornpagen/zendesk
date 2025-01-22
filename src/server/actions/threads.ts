@@ -11,7 +11,8 @@ import {
 	lt,
 	max,
 	or,
-	type SQL
+	type SQL,
+	ne
 } from "drizzle-orm"
 import { db } from "@/server/db"
 import * as schema from "@/server/db/schema"
@@ -31,13 +32,18 @@ export type ThreadWithLatestMessage = {
 /**
  * Fetch threads from the database, optionally filtered by
  * statuses, problems, priorities, visibility (read/unread),
- * and intext (subject/messages).
+ * needsResponse ("true"/"false"), and intext (subject/messages).
+ *
+ * needsResponse logic:
+ *  - A thread needs response if its final message is NOT "staff".
+ *  - A thread does NOT need response if its final message is "staff".
  */
 export async function getThreads(
 	statuses: ("open" | "closed" | "spam")[] = [],
 	problems: string[] = [],
 	priorities: ("urgent" | "non-urgent")[] = [],
 	visibility: ("read" | "unread")[] = [],
+	needsResponse: ("true" | "false")[] = [],
 	intext = ""
 ): Promise<ThreadWithLatestMessage[]> {
 	const { userId: clerkId } = await auth()
@@ -66,9 +72,7 @@ export async function getThreads(
 
 	/**
 	 * Subselect for the latest message time per thread:
-	 * SELECT MAX(messages.createdAt) as "lastMessageTime"
-	 * FROM messages
-	 * WHERE messages.threadId = threads.id
+	 * This helps with read/unread checks.
 	 */
 	const lastMessageTimeSubselect = db.$with("last_message_time").as(
 		db
@@ -102,20 +106,59 @@ export async function getThreads(
 	}
 
 	// Filter by intext => look for subject or message content match.
+	let intextCondition: SQL<unknown> | undefined
 	if (intext) {
 		const term = `%${intext}%`
-		const intextCondition = or(
+		intextCondition = or(
 			ilike(threads.subject, term),
 			ilike(messages.content, term)
 		)
-		if (intextCondition) {
-			conditions.push(intextCondition)
-		}
+	}
+	if (intextCondition) {
+		conditions.push(intextCondition)
 	}
 
-	// First query for distinct thread IDs that match our conditions
+	/**
+	 * Subselect for the ACTUAL latest message (any type), to check if it's "staff".
+	 * We'll call this CTE "latest_any_message" so we can filter by needsResponse.
+	 */
+	const latestAnyMessageSubselect = db.$with("latest_any_message").as(
+		db
+			.selectDistinctOn([messages.threadId], {
+				threadId: messages.threadId,
+				lastMessageType: messages.type
+			})
+			.from(messages)
+			.orderBy(messages.threadId, desc(messages.createdAt))
+	)
+
+	// Build the logic to filter by needsResponse.
+	// If needsResponse includes "true" but NOT "false", we only want lastMessageType != 'staff'
+	// If needsResponse includes "false" but NOT "true", we only want lastMessageType = 'staff'
+	const wantsNeedsResponse = needsResponse.includes("true")
+	const wantsNoResponse = needsResponse.includes("false")
+
+	let needsResponseCondition: SQL<unknown> | undefined
+	if (wantsNeedsResponse && !wantsNoResponse) {
+		// Filter threads whose final message is NOT staff
+		needsResponseCondition = and(
+			eq(latestAnyMessageSubselect.threadId, threads.id),
+			ne(latestAnyMessageSubselect.lastMessageType, "staff")
+		)
+	} else if (!wantsNeedsResponse && wantsNoResponse) {
+		// Filter threads whose final message is staff
+		needsResponseCondition = and(
+			eq(latestAnyMessageSubselect.threadId, threads.id),
+			eq(latestAnyMessageSubselect.lastMessageType, "staff")
+		)
+	}
+	if (needsResponseCondition) {
+		conditions.push(needsResponseCondition)
+	}
+
+	// Now gather distinct thread IDs that match all the above conditions.
 	const threadIdsQuery = await db
-		.with(lastMessageTimeSubselect)
+		.with(lastMessageTimeSubselect, latestAnyMessageSubselect)
 		.selectDistinct({ threadId: threads.id })
 		.from(threads)
 		.innerJoin(customers, eq(threads.customerId, customers.id))
@@ -124,14 +167,17 @@ export async function getThreads(
 			lastMessageTimeSubselect,
 			eq(threads.id, lastMessageTimeSubselect.threadId)
 		)
+		.leftJoin(
+			latestAnyMessageSubselect,
+			eq(threads.id, latestAnyMessageSubselect.threadId)
+		)
 		.where(conditions.length > 0 ? and(...conditions) : undefined)
 
 	const threadIds = threadIdsQuery.map((row) => row.threadId)
 
 	/**
-	 * We'll use a CTE with DISTINCT ON to select the latest non-staff message for each thread.
-	 * We ORDER BY threadId first, and then descending createdAt so the first row
-	 * is the newest message.
+	 * We'll use a CTE with DISTINCT ON to select the latest NON-staff message for each thread
+	 * just for returning as the "latestMessage". This remains the same as before (example usage).
 	 */
 	const latestMessages = db.$with("latest_messages").as(
 		db
@@ -152,7 +198,7 @@ export async function getThreads(
 			.orderBy(messages.threadId, desc(messages.createdAt))
 	)
 
-	// Now get the actual threads + their latest messages
+	// Now get the actual threads + their latest non-staff message
 	const queryResult = await db
 		.with(latestMessages)
 		.select({

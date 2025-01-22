@@ -7,17 +7,27 @@ import {
 	Hash,
 	Search,
 	AlertCircle,
-	Clock
+	Clock,
+	MessageCircle,
+	MessageCircleOff
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+
 interface SelectedFiltersProps {
 	statuses: string[]
 	problems: string[]
 	priorities: string[]
 	visibility: string[]
+	needsResponse: string[]
 	intext: string
 	onFilterRemove: (
-		type: "status" | "problem" | "priority" | "intext" | "visibility",
+		type:
+			| "status"
+			| "problem"
+			| "priority"
+			| "intext"
+			| "visibility"
+			| "needsResponse",
 		value: string
 	) => void
 }
@@ -41,11 +51,22 @@ const visibilityIcons: { [key: string]: React.ReactNode } = {
 	all: <Hash className="h-4 w-4 mr-2" />
 }
 
+const responseIcons: { [key: string]: React.ReactNode } = {
+	true: <MessageCircle className="h-4 w-4 mr-2" />,
+	false: <MessageCircleOff className="h-4 w-4 mr-2" />
+}
+
+const responseLabels: { [key: string]: string } = {
+	true: "Needs Response",
+	false: "Responded"
+}
+
 export function MessagesSelectedFilters({
 	statuses,
 	problems,
 	priorities,
 	visibility,
+	needsResponse,
 	intext,
 	onFilterRemove
 }: SelectedFiltersProps) {
@@ -54,6 +75,7 @@ export function MessagesSelectedFilters({
 		problems.length === 0 &&
 		priorities.length === 0 &&
 		visibility.length === 0 &&
+		needsResponse.length === 0 &&
 		!intext
 	) {
 		return null
@@ -108,6 +130,17 @@ export function MessagesSelectedFilters({
 				>
 					{visibilityIcons[v]}
 					<span className="capitalize">{v}</span>
+				</Badge>
+			))}
+			{needsResponse.map((value) => (
+				<Badge
+					key={`response-${value}`}
+					variant="secondary"
+					className="flex items-center cursor-pointer"
+					onClick={() => onFilterRemove("needsResponse", value)}
+				>
+					{responseIcons[value]}
+					<span>{responseLabels[value]}</span>
 				</Badge>
 			))}
 			{intext && (

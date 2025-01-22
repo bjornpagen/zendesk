@@ -11,6 +11,7 @@ interface Filters {
 	problems: string[]
 	priorities: string[]
 	visibility: string[]
+	needsResponse: string[]
 	intext: string
 }
 
@@ -18,6 +19,7 @@ interface Filters {
 const ThreadStatus = z.enum(["open", "closed", "spam"])
 const ThreadPriority = z.enum(["urgent", "non-urgent"])
 const ThreadVisibility = z.enum(["read", "unread"])
+const ThreadNeedsResponse = z.enum(["true", "false"])
 
 // Schema for validating URL parameters
 const SearchParamsSchema = z.object({
@@ -42,6 +44,11 @@ const SearchParamsSchema = z.object({
 		.transform((str) => str.split(","))
 		.pipe(z.array(ThreadVisibility))
 		.optional(),
+	needsResponse: z
+		.string()
+		.transform((str) => str.split(","))
+		.pipe(z.array(ThreadNeedsResponse))
+		.optional(),
 	q: z.string().optional()
 })
 
@@ -61,6 +68,7 @@ export function useThreadFilters() {
 		problem: selectedProblems = [],
 		priority: selectedPriorities = [],
 		visibility: selectedVisibility = [],
+		needsResponse: selectedNeedsResponse = [],
 		q: intextSearch = ""
 	} = parsedParams.success ? parsedParams.data : {}
 
@@ -101,6 +109,7 @@ export function useThreadFilters() {
 			selectedProblems,
 			selectedPriorities,
 			selectedVisibility,
+			selectedNeedsResponse,
 			intextSearch
 		],
 		// Fetch function that ignores the key and uses the filter parameters
@@ -110,6 +119,7 @@ export function useThreadFilters() {
 				selectedProblems,
 				selectedPriorities,
 				selectedVisibility,
+				selectedNeedsResponse,
 				intextSearch
 			)
 	)
@@ -147,6 +157,8 @@ export function useThreadFilters() {
 					filters.priorities.length > 0 ? filters.priorities : undefined,
 				visibility:
 					filters.visibility.length > 0 ? filters.visibility : undefined,
+				needsResponse:
+					filters.needsResponse.length > 0 ? filters.needsResponse : undefined,
 				q: filters.intext || undefined
 			})
 		},
@@ -159,6 +171,7 @@ export function useThreadFilters() {
 		selectedProblems,
 		selectedPriorities,
 		selectedVisibility,
+		selectedNeedsResponse,
 		intextSearch,
 		filteredThreads: threads,
 		handleOpenChange,

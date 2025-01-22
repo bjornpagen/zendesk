@@ -19,7 +19,9 @@ import {
 	Hash,
 	Search,
 	AlertCircle,
-	Clock
+	Clock,
+	MessageCircle,
+	MessageCircleOff
 } from "lucide-react"
 import useSWR from "swr"
 import { getProblems, type Problem } from "@/server/actions/problems"
@@ -29,12 +31,14 @@ interface AppCommandProps {
 	selectedProblems: string[]
 	selectedPriorities: string[]
 	selectedVisibility: string[]
+	selectedNeedsResponse: string[]
 	intextSearch: string
 	onFiltersChange: (filters: {
 		statuses: string[]
 		problems: string[]
 		priorities: string[]
 		visibility: string[]
+		needsResponse: string[]
 		intext: string
 	}) => void
 }
@@ -44,6 +48,7 @@ export function MessagesCommand({
 	selectedProblems,
 	selectedPriorities,
 	selectedVisibility,
+	selectedNeedsResponse,
 	intextSearch,
 	onFiltersChange
 }: AppCommandProps) {
@@ -81,6 +86,7 @@ export function MessagesCommand({
 				problems: selectedProblems,
 				priorities: selectedPriorities,
 				visibility: selectedVisibility,
+				needsResponse: selectedNeedsResponse,
 				intext: intextSearch
 			})
 		},
@@ -89,6 +95,7 @@ export function MessagesCommand({
 			selectedProblems,
 			selectedPriorities,
 			selectedVisibility,
+			selectedNeedsResponse,
 			intextSearch,
 			onFiltersChange
 		]
@@ -104,6 +111,7 @@ export function MessagesCommand({
 				problems: newProblems,
 				priorities: selectedPriorities,
 				visibility: selectedVisibility,
+				needsResponse: selectedNeedsResponse,
 				intext: intextSearch
 			})
 		},
@@ -112,6 +120,7 @@ export function MessagesCommand({
 			selectedProblems,
 			selectedPriorities,
 			selectedVisibility,
+			selectedNeedsResponse,
 			intextSearch,
 			onFiltersChange
 		]
@@ -127,6 +136,7 @@ export function MessagesCommand({
 				problems: selectedProblems,
 				priorities: newPriorities,
 				visibility: selectedVisibility,
+				needsResponse: selectedNeedsResponse,
 				intext: intextSearch
 			})
 		},
@@ -135,6 +145,7 @@ export function MessagesCommand({
 			selectedProblems,
 			selectedPriorities,
 			selectedVisibility,
+			selectedNeedsResponse,
 			intextSearch,
 			onFiltersChange
 		]
@@ -150,6 +161,7 @@ export function MessagesCommand({
 				problems: selectedProblems,
 				priorities: selectedPriorities,
 				visibility: newVisibility,
+				needsResponse: selectedNeedsResponse,
 				intext: intextSearch
 			})
 		},
@@ -158,6 +170,32 @@ export function MessagesCommand({
 			selectedStatuses,
 			selectedProblems,
 			selectedPriorities,
+			selectedNeedsResponse,
+			intextSearch,
+			onFiltersChange
+		]
+	)
+
+	const toggleNeedsResponse = useCallback(
+		(value: string) => {
+			const newNeedsResponse = selectedNeedsResponse.includes(value)
+				? selectedNeedsResponse.filter((r) => r !== value)
+				: [...selectedNeedsResponse, value]
+			onFiltersChange({
+				statuses: selectedStatuses,
+				problems: selectedProblems,
+				priorities: selectedPriorities,
+				visibility: selectedVisibility,
+				needsResponse: newNeedsResponse,
+				intext: intextSearch
+			})
+		},
+		[
+			selectedNeedsResponse,
+			selectedStatuses,
+			selectedProblems,
+			selectedPriorities,
+			selectedVisibility,
 			intextSearch,
 			onFiltersChange
 		]
@@ -170,6 +208,7 @@ export function MessagesCommand({
 				problems: selectedProblems,
 				priorities: selectedPriorities,
 				visibility: selectedVisibility,
+				needsResponse: selectedNeedsResponse,
 				intext: searchText
 			})
 		}
@@ -179,6 +218,7 @@ export function MessagesCommand({
 		selectedProblems,
 		selectedPriorities,
 		selectedVisibility,
+		selectedNeedsResponse,
 		onFiltersChange
 	])
 
@@ -189,6 +229,7 @@ export function MessagesCommand({
 			problems: selectedProblems,
 			priorities: selectedPriorities,
 			visibility: selectedVisibility,
+			needsResponse: selectedNeedsResponse,
 			intext: ""
 		})
 	}, [
@@ -196,6 +237,7 @@ export function MessagesCommand({
 		selectedProblems,
 		selectedPriorities,
 		selectedVisibility,
+		selectedNeedsResponse,
 		onFiltersChange
 	])
 
@@ -266,6 +308,19 @@ export function MessagesCommand({
 						<Clock className="mr-2 h-4 w-4" />
 						<span>Non-Urgent</span>
 						<span className={invisibleStyle}>priority:non-urgent</span>
+					</CommandItem>
+				</CommandGroup>
+				<CommandSeparator />
+				<CommandGroup heading="Filter Response Status" className="p-2">
+					<CommandItem onSelect={() => toggleNeedsResponse("true")}>
+						<MessageCircle className="mr-2 h-4 w-4" />
+						<span>Needs Response</span>
+						<span className={invisibleStyle}>needsResponse:true</span>
+					</CommandItem>
+					<CommandItem onSelect={() => toggleNeedsResponse("false")}>
+						<MessageCircleOff className="mr-2 h-4 w-4" />
+						<span>Responded</span>
+						<span className={invisibleStyle}>needsResponse:false</span>
 					</CommandItem>
 				</CommandGroup>
 				<CommandSeparator />
