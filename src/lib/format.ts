@@ -7,7 +7,7 @@ export function formatDate(
 	date: Date | string | number,
 	options: Intl.DateTimeFormatOptions = {
 		year: "numeric",
-		month: "long",
+		month: "short",
 		day: "numeric"
 	}
 ): string {
