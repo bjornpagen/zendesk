@@ -10,9 +10,7 @@ export default async function Layout({
 	sheet: React.ReactNode
 }) {
 	// Sync user data on each page load
-	await syncUser().catch((error) => {
-		throw new Error(`Failed to sync user data: ${error.message}`)
-	})
+	await syncUser()
 
 	return (
 		<SidebarProvider>
