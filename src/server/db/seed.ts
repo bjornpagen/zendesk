@@ -170,7 +170,6 @@ async function main() {
 				customerId: null,
 				fileId: randomFileId,
 				messageId: null,
-				inReplyTo: null,
 				content: faker.lorem.paragraph(),
 				createdAt: timestamp,
 				updatedAt: timestamp
@@ -183,7 +182,6 @@ async function main() {
 				customerId: thread.customerId,
 				fileId: faker.datatype.boolean() ? randomItem(createdFiles).id : null,
 				messageId: null,
-				inReplyTo: null,
 				content: faker.lorem.paragraph(),
 				createdAt: faker.date.recent({ days: 30 }),
 				updatedAt: faker.date.recent({ days: 30 })
@@ -196,7 +194,6 @@ async function main() {
 				customerId: thread.customerId,
 				fileId: faker.datatype.boolean() ? randomItem(createdFiles).id : null,
 				messageId: faker.string.uuid(),
-				inReplyTo: faker.datatype.boolean() ? faker.string.uuid() : null,
 				content: faker.lorem.paragraph(),
 				createdAt: faker.date.recent({ days: 30 }),
 				updatedAt: faker.date.recent({ days: 30 })

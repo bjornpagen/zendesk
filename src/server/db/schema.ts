@@ -85,7 +85,6 @@ export const messages = createTable(
 			.notNull()
 			.references(() => threads.id),
 		messageId: text("message_id").unique(),
-		inReplyTo: text("in_reply_to"),
 		content: text("content").notNull()
 	},
 	(table) => ({
@@ -107,7 +106,7 @@ export const messages = createTable(
 		),
 		widgetCheck: check(
 			"check_widget_constraint",
-			sql`${table.type} = 'widget' AND ${table.messageId} IS NULL AND ${table.inReplyTo} IS NULL AND ${table.userClerkId} IS NULL`
+			sql`${table.type} = 'widget' AND ${table.messageId} IS NULL AND ${table.userClerkId} IS NULL`
 		),
 		threadIdIndex: index("messages_thread_id_idx").on(table.threadId),
 		customerIdIndex: index("messages_customer_id_idx").on(table.customerId),

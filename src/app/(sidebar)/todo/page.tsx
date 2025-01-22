@@ -31,6 +31,12 @@ export default function TodoPage() {
 			priority: "medium"
 		},
 		{
+			title: "Parse Inbound Emails",
+			description:
+				"Implement email parsing system to clean and format top-posted email replies for better readability in threads",
+			priority: "medium"
+		},
+		{
 			title: "Problem Categories System",
 			description:
 				"Implement problem category management, routing rules, and analytics",
