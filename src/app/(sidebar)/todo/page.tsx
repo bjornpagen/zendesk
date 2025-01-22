@@ -92,25 +92,31 @@ export default function TodoPage() {
 	] as Todo[]
 
 	return (
-		<div className="space-y-4">
+		<div>
 			<h1 className="text-2xl font-bold mb-6">Project Requirements Todo</h1>
-			{todos.map((todo) => (
-				<Card key={todo.title}>
-					<CardHeader>
-						<CardTitle className="flex items-center justify-between">
-							<span>{todo.title}</span>
-							<span
-								className={`text-sm px-2 py-1 rounded ${priorityStyles[todo.priority]}`}
-							>
-								{todo.priority}
-							</span>
-						</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<p className="text-sm text-muted-foreground">{todo.description}</p>
-					</CardContent>
-				</Card>
-			))}
+			<div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+				{todos.map((todo) => (
+					<Card key={todo.title} className="h-full">
+						<CardHeader>
+							<CardTitle className="flex items-center justify-between gap-3">
+								<span className="text-lg">{todo.title}</span>
+								<span
+									className={`text-sm px-2 py-1 rounded whitespace-nowrap ${
+										priorityStyles[todo.priority]
+									}`}
+								>
+									{todo.priority}
+								</span>
+							</CardTitle>
+						</CardHeader>
+						<CardContent>
+							<p className="text-sm text-muted-foreground">
+								{todo.description}
+							</p>
+						</CardContent>
+					</Card>
+				))}
+			</div>
 		</div>
 	)
 }
