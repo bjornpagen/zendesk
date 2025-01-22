@@ -19,12 +19,6 @@ interface Todo {
 export default function TodoPage() {
 	const todos = [
 		{
-			title: "Postmark Email Integration",
-			description:
-				"Implement email sending and receiving functionality using Postmark for seamless email communication",
-			priority: "high"
-		},
-		{
 			title: "Fix Read/Unread Filters",
 			description:
 				"Fix the read/unread filters so that they work correctly and are consistent with the messages page",

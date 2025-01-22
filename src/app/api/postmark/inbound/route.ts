@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
 				})
 				.onConflictDoUpdate({
 					target: schema.customers.email,
-					set: { name: fromName }
+					set: { email: fromEmail }
 				})
 				.returning({
 					id: schema.customers.id,
