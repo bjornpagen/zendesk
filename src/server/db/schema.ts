@@ -218,5 +218,9 @@ export const messagesRelations = relations(messages, ({ one }) => ({
 	user: one(users, {
 		fields: [messages.userClerkId],
 		references: [users.clerkId]
+	}),
+	customer: one(customers, {
+		fields: [messages.customerId],
+		references: [customers.id]
 	})
 }))

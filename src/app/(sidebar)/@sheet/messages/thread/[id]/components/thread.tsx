@@ -129,8 +129,6 @@ export default function Thread() {
 						<SheetTitle>{thread.subject}</SheetTitle>
 					</SheetHeader>
 					<div className="flex items-center space-x-2 text-sm">
-						<span className="font-medium">{thread.customer.name}</span>
-						<span>•</span>
 						<Badge
 							variant={getStatusVariant(thread.status)}
 							className="cursor-pointer"
@@ -138,7 +136,6 @@ export default function Thread() {
 						>
 							{capitalizeFirstLetter(thread.status)}
 						</Badge>
-						<span>•</span>
 						<Badge
 							variant={getPriorityVariant(thread.priority)}
 							className="capitalize cursor-pointer"
@@ -146,7 +143,6 @@ export default function Thread() {
 						>
 							{thread.priority}
 						</Badge>
-						<span>•</span>
 						<Badge
 							variant="outline"
 							className="capitalize cursor-pointer"
@@ -180,14 +176,14 @@ export default function Thread() {
 									<AvatarFallback>
 										{message.type === "staff"
 											? message.user?.name?.charAt(0) || "A"
-											: thread.customer.name.charAt(0)}
+											: message.customer?.name?.charAt(0) || "C"}
 									</AvatarFallback>
 								</Avatar>
 								<div className="flex flex-col">
 									<p className="text-sm font-medium">
 										{message.type === "staff"
 											? message.user?.name || "Support Agent"
-											: thread.customer.name}
+											: message.customer?.name || "Customer"}
 									</p>
 									<p className="text-xs text-muted-foreground mb-1">
 										{formatDate(message.createdAt)}

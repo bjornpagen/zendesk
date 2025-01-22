@@ -29,11 +29,6 @@ export async function getThread(threadId: string) {
 			priority: true
 		},
 		with: {
-			customer: {
-				columns: {
-					name: true
-				}
-			},
 			problem: {
 				columns: {
 					title: true
@@ -55,6 +50,11 @@ export async function getThread(threadId: string) {
 						columns: {
 							name: true,
 							avatar: true
+						}
+					},
+					customer: {
+						columns: {
+							name: true
 						}
 					}
 				}
