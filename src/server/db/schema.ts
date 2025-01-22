@@ -29,7 +29,7 @@ export const customers = createTable(
 	{
 		id: char("id", { length: 24 }).primaryKey().notNull().$default(createId),
 		...timestamps,
-		email: text("email").notNull(),
+		email: text("email").notNull().unique(),
 		name: text("name").notNull()
 	},
 	(table) => ({
@@ -46,7 +46,7 @@ export const users = createTable(
 			.notNull()
 			.references(() => teams.id),
 		avatar: text("avatar").notNull(),
-		email: text("email").notNull(),
+		email: text("email").notNull().unique(),
 		name: text("name").notNull()
 	},
 	(table) => ({
@@ -84,7 +84,7 @@ export const messages = createTable(
 		threadId: char("thread_id", { length: 24 })
 			.notNull()
 			.references(() => threads.id),
-		messageId: text("message_id"),
+		messageId: text("message_id").unique(),
 		inReplyTo: text("in_reply_to"),
 		content: text("content").notNull()
 	},
