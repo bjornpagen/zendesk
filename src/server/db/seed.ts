@@ -50,12 +50,20 @@ async function main() {
 
 	// biome-ignore lint/suspicious/noConsole: Acceptable in seed script for progress tracking
 	console.log("Seeding additional teams...")
-	const teamCount = 16 // Changed from 4
+	const teamCount = 16
+	const uniqueTeamNames: string[] = []
+	while (uniqueTeamNames.length < teamCount) {
+		const teamName = `Team ${faker.food.dish()}`
+		if (!uniqueTeamNames.includes(teamName)) {
+			uniqueTeamNames.push(teamName)
+		}
+	}
+
 	const additionalTeams = await db
 		.insert(schema.teams)
 		.values(
-			Array.from({ length: teamCount }).map(() => ({
-				name: faker.company.name()
+			uniqueTeamNames.map((name) => ({
+				name
 			}))
 		)
 		.returning()
@@ -94,13 +102,21 @@ async function main() {
 
 	// biome-ignore lint/suspicious/noConsole: Acceptable in seed script for progress tracking
 	console.log("Seeding problems...")
-	const problemCount = 20 // Changed from 5
+	// Get unique ethnic categories
+	const uniqueCategories: string[] = []
+	while (uniqueCategories.length < 20) {
+		const category = faker.food.ethnicCategory()
+		if (!uniqueCategories.includes(category)) {
+			uniqueCategories.push(category)
+		}
+	}
+
 	const createdProblems = await db
 		.insert(schema.problems)
 		.values(
-			Array.from({ length: problemCount }).map(() => ({
-				title: faker.hacker.noun(),
-				description: faker.hacker.phrase()
+			uniqueCategories.map((category) => ({
+				title: category,
+				description: `Common issues and solutions for ${category} cuisine`
 			}))
 		)
 		.returning()

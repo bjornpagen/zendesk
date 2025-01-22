@@ -156,7 +156,7 @@ export const teams = createTable(
 	{
 		id: char("id", { length: 24 }).primaryKey().notNull().$default(createId),
 		...timestamps,
-		name: text("name").notNull()
+		name: text("name").notNull().unique()
 	},
 	(table) => ({
 		nameIndex: index("teams_name_idx").on(table.name)
@@ -169,7 +169,7 @@ export const problems = createTable(
 		id: char("id", { length: 24 }).primaryKey().notNull().$default(createId),
 		...timestamps,
 		description: text("description").notNull(),
-		title: text("title").notNull()
+		title: text("title").notNull().unique()
 	},
 	(table) => ({
 		titleIndex: index("problems_title_idx").on(table.title)
