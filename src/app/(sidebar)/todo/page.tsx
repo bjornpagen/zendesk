@@ -19,12 +19,6 @@ interface Todo {
 export default function TodoPage() {
 	const todos = [
 		{
-			title: "Support Agent Management",
-			description:
-				"Add support agent role with limited permissions focused on ticket handling and customer interactions",
-			priority: "high"
-		},
-		{
 			title: "Support Organizations",
 			description:
 				"Add support for organizations to the app, allowing users to manage multiple teams within a single account",

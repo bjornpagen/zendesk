@@ -75,6 +75,7 @@ export function TeamsAction({
 							onSelect={async () => {
 								try {
 									await createInvitation(searchText, teamId)
+									onMemberUpdate(searchText, teamId, "invite")
 									onClose?.()
 								} catch (error) {
 									console.error("Failed to invite user:", error)
