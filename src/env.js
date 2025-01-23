@@ -28,10 +28,10 @@ export const env = createEnv({
 	client: {
 		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string(),
 		NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL: z.literal(
-			"/messages?status=open&needsResponse=true"
+			"https://zendesk-sable.vercel.app/messages?status=open&needsResponse=true"
 		),
 		NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL: z.literal(
-			"/messages?status=open&needsResponse=true"
+			"https://zendesk-sable.vercel.app/messages?status=open&needsResponse=true"
 		)
 	},
 
