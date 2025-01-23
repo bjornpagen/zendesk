@@ -74,7 +74,7 @@ export function TeamsAction({
 						<CommandItem
 							onSelect={async () => {
 								try {
-									await createInvitation(searchText)
+									await createInvitation(searchText, teamId)
 									onClose?.()
 								} catch (error) {
 									console.error("Failed to invite user:", error)

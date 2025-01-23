@@ -21,20 +21,28 @@ export async function syncUser(): Promise<void> {
 		.limit(1)
 		.then(([user]) => user)
 
-	// Get oldest team
-	const oldestTeam = await db
-		.select({
-			id: schema.teams.id
-		})
-		.from(schema.teams)
-		.orderBy(schema.teams.createdAt)
-		.limit(1)
-		.then(([team]) => team)
-	if (!oldestTeam) {
-		throw new Error("No teams found")
-	}
-
 	if (!existing) {
+		// Get teamId from publicMetadata if available
+		const invitedTeamId = user.publicMetadata?.teamId as string | undefined
+
+		// If no teamId in metadata, fallback to oldest team
+		let teamId = invitedTeamId
+		if (!teamId) {
+			const oldestTeam = await db
+				.select({
+					id: schema.teams.id
+				})
+				.from(schema.teams)
+				.orderBy(schema.teams.createdAt)
+				.limit(1)
+				.then(([team]) => team)
+
+			if (!oldestTeam) {
+				throw new Error("No teams found")
+			}
+			teamId = oldestTeam.id
+		}
+
 		// Insert new user
 		await db.insert(schema.users).values({
 			clerkId: user.id,
@@ -43,7 +51,7 @@ export async function syncUser(): Promise<void> {
 				: user.username || "Anonymous",
 			avatar: user.imageUrl,
 			email: user.emailAddresses[0]?.emailAddress || "",
-			teamId: oldestTeam.id,
+			teamId: teamId,
 			role: "admin"
 		})
 

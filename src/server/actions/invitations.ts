@@ -2,43 +2,31 @@
 import { clerk } from "@/server/clerk"
 import { auth } from "@clerk/nextjs/server"
 
-export async function createInvitation(email: string) {
+export async function createInvitation(email: string, teamId: string) {
 	const { userId: clerkId } = await auth()
 	if (!clerkId) {
 		throw new Error("Unauthorized")
 	}
 
-	try {
-		// Validate email
-		if (!email || !email.includes("@")) {
-			throw new Error("Invalid email address")
-		}
+	// Validate email and teamId
+	if (!email || !email.includes("@")) {
+		throw new Error("Invalid email address")
+	}
+	if (!teamId) {
+		throw new Error("Team ID is required")
+	}
 
-		const invitation = await clerk.invitations.createInvitation({
-			emailAddress: email.trim(),
-			publicMetadata: {
-				invitedBy: clerkId
-			}
-		})
-		// Return only the necessary serializable data
-		return {
-			id: invitation.id,
-			emailAddress: invitation.emailAddress,
-			status: invitation.status
+	const invitation = await clerk.invitations.createInvitation({
+		emailAddress: email.trim(),
+		publicMetadata: {
+			invitedBy: clerkId,
+			teamId: teamId
 		}
-	} catch (error: any) {
-		// Log the detailed error for debugging
-		console.error("Clerk invitation error:", {
-			error,
-			status: error.status,
-			clerkTraceId: error.clerkTraceId,
-			errors: error.errors
-		})
-
-		// Throw a more user-friendly error
-		if (error.errors?.[0]?.message) {
-			throw new Error(`Invitation failed: ${error.errors[0].message}`)
-		}
-		throw error
+	})
+	// Return only the necessary serializable data
+	return {
+		id: invitation.id,
+		emailAddress: invitation.emailAddress,
+		status: invitation.status
 	}
 }
