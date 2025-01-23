@@ -12,7 +12,6 @@ import {
 	Shield,
 	Zap,
 	Globe,
-	ArrowRight,
 	Inbox,
 	Tag,
 	AlertTriangle,
@@ -51,6 +50,7 @@ import {
 	SiAirbnb,
 	SiSpotify
 } from "react-icons/si"
+import { SignedIn, SignedOut } from "@clerk/nextjs"
 
 export default function LandingPage() {
 	const [theme, setTheme] = useState<"light" | "dark">("dark")
@@ -117,12 +117,19 @@ export default function LandingPage() {
 								<Sun className="h-[1.2rem] w-[1.2rem]" />
 							)}
 						</Button>
-						<Button variant="outline" asChild>
-							<a href="/sign-in">Sign In</a>
-						</Button>
-						<Button asChild>
-							<a href="/sign-up">Sign Up</a>
-						</Button>
+						<SignedIn>
+							<Button variant="outline" asChild>
+								<a href="/messages?status=open&needsResponse=true">Dashboard</a>
+							</Button>
+						</SignedIn>
+						<SignedOut>
+							<Button variant="outline" asChild>
+								<a href="/sign-in">Sign In</a>
+							</Button>
+							<Button asChild>
+								<a href="/sign-up">Sign Up</a>
+							</Button>
+						</SignedOut>
 					</div>
 				</div>
 			</motion.header>
@@ -146,12 +153,18 @@ export default function LandingPage() {
 							Empower your team with AI-driven insights, seamless collaboration,
 							and unparalleled efficiency.
 						</p>
-						<Button size="lg" className="mr-4">
-							Get Started
-						</Button>
-						<Button variant="outline" size="lg">
-							Book a Demo
-						</Button>
+						<motion.div variants={itemVariants}>
+							<SignedIn>
+								<Button size="lg" className="mr-4">
+									Get Started
+								</Button>
+							</SignedIn>
+							<SignedOut>
+								<Button variant="outline" size="lg">
+									Book a Demo
+								</Button>
+							</SignedOut>
+						</motion.div>
 					</motion.div>
 					<motion.div
 						animate={{
@@ -240,28 +253,28 @@ export default function LandingPage() {
 						</motion.h3>
 						<motion.div variants={itemVariants}>
 							<Tabs defaultValue="support" className="w-full">
-								<TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-8 bg-background/60 dark:bg-background/40 backdrop-blur-sm p-1 rounded-lg">
+								<TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-8 bg-background/60 dark:bg-background/40 backdrop-blur-sm p-2 rounded-lg gap-2">
 									<TabsTrigger
 										value="support"
-										className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md transition-colors"
+										className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md transition-colors py-3"
 									>
 										Support System
 									</TabsTrigger>
 									<TabsTrigger
 										value="collaboration"
-										className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md transition-colors"
+										className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md transition-colors py-3"
 									>
 										Team Collaboration
 									</TabsTrigger>
 									<TabsTrigger
 										value="management"
-										className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md transition-colors"
+										className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md transition-colors py-3"
 									>
 										Ticket Management
 									</TabsTrigger>
 									<TabsTrigger
 										value="analytics"
-										className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md transition-colors"
+										className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md transition-colors py-3"
 									>
 										Analytics & AI
 									</TabsTrigger>
@@ -681,15 +694,24 @@ export default function LandingPage() {
 							today.
 						</motion.p>
 						<motion.div variants={itemVariants}>
-							<Button size="lg" asChild className="mr-4">
-								<a href="/sign-up">Start Your Free Trial</a>
-							</Button>
-							<Button variant="outline" size="lg" asChild>
-								<a href="/sign-up">
-									Schedule a Demo
-									<ArrowRight className="ml-2 h-4 w-4" />
-								</a>
-							</Button>
+							<SignedIn>
+								<Button size="lg" asChild className="mr-4">
+									<a href="/messages?status=open&needsResponse=true">
+										Go to Dashboard
+									</a>
+								</Button>
+								<Button size="lg" variant="outline" asChild>
+									<a href="/teams">Manage Teams</a>
+								</Button>
+							</SignedIn>
+							<SignedOut>
+								<Button size="lg" asChild className="mr-4">
+									<a href="/sign-up">Start Your Free Trial</a>
+								</Button>
+								<Button size="lg" variant="outline" asChild>
+									<a href="/sign-in">Sign In</a>
+								</Button>
+							</SignedOut>
 						</motion.div>
 					</div>
 				</motion.section>
