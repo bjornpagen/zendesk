@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useRef, useState } from "react"
+import { useRef, useState } from "react"
 import {
 	Command,
 	CommandEmpty,
@@ -10,7 +10,12 @@ import {
 	CommandList
 } from "@/components/ui/command"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { mockTeamMembers } from "@/types/frontend"
+import useSWR from "swr"
+import {
+	getTeamMembers,
+	getAvailableUsers
+} from "@/server/actions/team-members"
+import { getTeam } from "@/server/actions/teams"
 
 interface GroupActionProps {
 	teamId: string
@@ -32,47 +37,43 @@ export function TeamsAction({
 	const [searchText, setSearchText] = useState("")
 	const inputRef = useRef<HTMLInputElement>(null)
 
-	// Filter members based on team and search text
-	const filteredMembers = useMemo(() => {
-		return mockTeamMembers.filter((member) => {
-			const matchesSearch =
-				searchText.length === 0 ||
-				member.name.toLowerCase().includes(searchText.toLowerCase()) ||
-				member.email.toLowerCase().includes(searchText.toLowerCase())
+	// Replace useEffect with useSWR
+	const { data: members = [] } = useSWR(
+		["teamMembers", teamId, mode, searchText],
+		() =>
+			mode === "add"
+				? getAvailableUsers(teamId, searchText)
+				: getTeamMembers(teamId, searchText)
+	)
 
-			// For "add", show members NOT in the team
-			// For "remove", show members IN the team
-			const matchesMode =
-				mode === "add" ? member.team !== teamId : member.team === teamId
+	const { data: team } = useSWR(["team", teamId], () => getTeam(teamId))
 
-			return matchesSearch && matchesMode
-		})
-	}, [teamId, searchText, mode])
-
-	const handleSelect = (memberId: string) => {
-		onMemberUpdate(memberId, teamId, mode)
-		onClose?.()
+	const handleSelect = async (memberId: string) => {
+		try {
+			await onMemberUpdate(memberId, teamId, mode)
+			onClose?.()
+		} catch (error) {
+			console.error("Failed to update team member:", error)
+		}
 	}
-
-	const teamTitle = teamId === "security" ? "Security Team" : "Privacy Team"
 
 	return (
 		<Command className="rounded-lg border shadow-md w-[450px]">
 			<CommandInput
 				ref={inputRef}
 				autoFocus
-				placeholder={`Search members to ${mode === "add" ? "add to" : "remove from"} ${teamTitle}...`}
+				placeholder={`Search members to ${mode === "add" ? "add to" : "remove from"} ${team?.name || "team"}...`}
 				value={searchText}
 				onValueChange={setSearchText}
 			/>
 			<CommandList>
 				<CommandGroup
-					heading={`${mode === "add" ? "Add to" : "Remove from"} ${teamTitle}`}
+					heading={`${mode === "add" ? "Add to" : "Remove from"} ${team?.name || "team"}`}
 				>
-					{filteredMembers.map((member) => (
+					{members.map((member) => (
 						<CommandItem
-							key={member.id}
-							onSelect={() => handleSelect(member.id)}
+							key={member.clerkId}
+							onSelect={() => handleSelect(member.clerkId)}
 						>
 							<Avatar className="h-6 w-6 mr-2">
 								<AvatarImage src={member.avatar} />

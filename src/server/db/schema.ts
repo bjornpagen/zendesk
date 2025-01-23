@@ -5,7 +5,6 @@ import {
 	timestamp,
 	text,
 	check,
-	primaryKey,
 	integer,
 	index
 } from "drizzle-orm/pg-core"
@@ -178,26 +177,6 @@ export const problems = createTable(
 	})
 )
 
-export const teamMembers = createTable(
-	"team_member",
-	{
-		userId: text("user_clerk_id")
-			.notNull()
-			.references(() => users.clerkId),
-		teamId: char("team_id", { length: 24 })
-			.notNull()
-			.references(() => teams.id),
-		lastAssignedAt: timestamp("last_assigned_at"),
-		...timestamps
-	},
-	(table) => ({
-		pk: primaryKey({ columns: [table.userId, table.teamId] }),
-		lastAssignedAtIndex: index("team_members_last_assigned_at_idx").on(
-			table.lastAssignedAt
-		)
-	})
-)
-
 export const threadsRelations = relations(threads, ({ many, one }) => ({
 	messages: many(messages),
 	customer: one(customers, {
@@ -226,5 +205,16 @@ export const messagesRelations = relations(messages, ({ one }) => ({
 	file: one(files, {
 		fields: [messages.fileId],
 		references: [files.id]
+	})
+}))
+
+export const teamsRelations = relations(teams, ({ many }) => ({
+	users: many(users)
+}))
+
+export const usersRelations = relations(users, ({ one }) => ({
+	team: one(teams, {
+		fields: [users.teamId],
+		references: [teams.id]
 	})
 }))

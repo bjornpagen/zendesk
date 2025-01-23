@@ -25,7 +25,6 @@ async function main() {
 	console.log("Cleaning up existing data...")
 	// Delete in reverse order of dependencies to avoid foreign key conflicts
 	await db.delete(schema.messages)
-	await db.delete(schema.teamMembers)
 	await db.delete(schema.files)
 	await db.delete(schema.threads)
 	await db.delete(schema.problems)
@@ -225,22 +224,6 @@ async function main() {
 	await db
 		.insert(schema.messages)
 		.values([...staffMessages, ...widgetMessages, ...emailMessages])
-
-	// biome-ignore lint/suspicious/noConsole: Acceptable in seed script for progress tracking
-	console.log("Seeding teamMembers...")
-	const teamMemberInserts: Array<
-		Omit<typeof schema.teamMembers.$inferInsert, "createdAt" | "updatedAt">
-	> = []
-	for (const user of createdUsers) {
-		teamMemberInserts.push({
-			userId: user.clerkId,
-			teamId: user.teamId,
-			lastAssignedAt: faker.datatype.boolean()
-				? faker.date.recent({ days: 100 })
-				: null
-		})
-	}
-	await db.insert(schema.teamMembers).values(teamMemberInserts)
 
 	// biome-ignore lint/suspicious/noConsole: Acceptable in seed script for progress tracking
 	console.log("Database seeding complete!")

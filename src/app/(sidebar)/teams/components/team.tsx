@@ -6,12 +6,13 @@ import { Search, UserPlus, UserMinus } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { formatDate } from "@/lib/format"
 import { useTeamFilters } from "@/hooks/use-team-filters"
-import { useMemo, useState } from "react"
-import type { TeamMemberUpdate } from "@/types/frontend"
+import { useMemo, useState, useCallback } from "react"
 import { TeamsSelectedFilters } from "./selected-filters"
 
 import { TeamsAction } from "./team-action"
 import { TeamsCommand } from "./command"
+import { mutate } from "swr"
+import { addTeamMember, removeTeamMember } from "@/server/actions/team-members"
 
 export default function Teams() {
 	const {
@@ -28,16 +29,25 @@ export default function Teams() {
 	)
 	const [selectedTeam, setSelectedTeam] = useState<string | null>(null)
 
-	// Group members by team
+	// Group members by team and store team IDs
 	const groupedMembers = useMemo(() => {
-		const groups: { [key: string]: typeof filteredTeamMembers } = {}
+		const groups: {
+			[key: string]: {
+				members: typeof filteredTeamMembers
+				teamId: string
+			}
+		} = {}
 
 		for (const member of filteredTeamMembers) {
 			if (!groups[member.team]) {
-				groups[member.team] = []
+				// First member of this team - initialize the group
+				groups[member.team] = {
+					members: [],
+					teamId: member.teamId // You'll need to add teamId to your TeamMember type
+				}
 			}
-			// biome-ignore lint/style/noNonNullAssertion: We know this exists because we initialize it in the if statement above
-			groups[member.team]!.push(member)
+			// biome-ignore lint/style/noNonNullAssertion: Property existence verified by preceding if-check
+			groups[member.team]!.members.push(member)
 		}
 
 		return groups
@@ -49,10 +59,24 @@ export default function Teams() {
 		privacy: "Privacy Team"
 	}
 
-	const handleTeamAction = (action: TeamMemberUpdate) => {
-		console.log("Team action:", action)
-		// TODO: Implement the actual team management logic
-	}
+	const handleTeamAction = useCallback(
+		async (memberId: string, teamId: string, action: "add" | "remove") => {
+			try {
+				switch (action) {
+					case "add":
+						await addTeamMember(memberId, teamId)
+						break
+					case "remove":
+						await removeTeamMember(memberId, teamId)
+						break
+				}
+				await mutate((key) => Array.isArray(key) && key[0] === "teamMembers")
+			} catch (error) {
+				console.error("Failed to update team member:", error)
+			}
+		},
+		[]
+	)
 
 	const handleClose = () => {
 		handleOpenChange(false)
@@ -91,85 +115,87 @@ export default function Teams() {
 			/>
 
 			<div className="space-y-8">
-				{Object.entries(groupedMembers).map(([team, members]) => (
-					<div key={team} className="space-y-6 px-0 rounded-lg">
-						<div className="flex justify-between items-center mb-4">
-							<div>
-								<h2 className="text-xl font-semibold text-gray-800 inline-block font-display">
-									{teamLabels[team] || team}
-								</h2>
-								<span className="text-sm text-muted-foreground ml-3">
-									({members.length}{" "}
-									{members.length === 1 ? "member" : "members"})
-								</span>
+				{Object.entries(groupedMembers).map(
+					([teamName, { members, teamId }]) => (
+						<div key={teamId} className="space-y-6 px-0 rounded-lg">
+							<div className="flex justify-between items-center mb-4">
+								<div>
+									<h2 className="text-xl font-semibold text-gray-800 inline-block font-display">
+										{teamLabels[teamName] || teamName}
+									</h2>
+									<span className="text-sm text-muted-foreground ml-3">
+										({members.length}{" "}
+										{members.length === 1 ? "member" : "members"})
+									</span>
+								</div>
+								<div className="flex gap-2">
+									<Button
+										variant="outline"
+										size="sm"
+										onClick={() => {
+											setSelectedAction("add")
+											setSelectedTeam(teamId)
+											handleOpenChange(true)
+										}}
+										title={`Add member to ${teamLabels[teamName]}`}
+									>
+										<UserPlus className="h-4 w-4 mr-2" />
+										Add
+									</Button>
+									<Button
+										variant="outline"
+										size="sm"
+										onClick={() => {
+											setSelectedAction("remove")
+											setSelectedTeam(teamId)
+											handleOpenChange(true)
+										}}
+										title={`Remove member from ${teamLabels[teamName]}`}
+									>
+										<UserMinus className="h-4 w-4 mr-2" />
+										Remove
+									</Button>
+								</div>
 							</div>
-							<div className="flex gap-2">
-								<Button
-									variant="outline"
-									size="sm"
-									onClick={() => {
-										setSelectedAction("add")
-										setSelectedTeam(team)
-										handleOpenChange(true)
-									}}
-									title={`Add member to ${teamLabels[team]}`}
-								>
-									<UserPlus className="h-4 w-4 mr-2" />
-									Add
-								</Button>
-								<Button
-									variant="outline"
-									size="sm"
-									onClick={() => {
-										setSelectedAction("remove")
-										setSelectedTeam(team)
-										handleOpenChange(true)
-									}}
-									title={`Remove member from ${teamLabels[team]}`}
-								>
-									<UserMinus className="h-4 w-4 mr-2" />
-									Remove
-								</Button>
-							</div>
-						</div>
 
-						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-							{members.map((member) => (
-								<Card
-									key={member.id}
-									className="cursor-pointer hover:shadow-md transition-shadow"
-								>
-									<CardContent className="flex flex-col p-4 space-y-3">
-										<div className="flex items-start gap-4">
-											<Avatar>
-												<AvatarImage src={member.avatar} />
-												<AvatarFallback>
-													{member.name
-														.split(" ")
-														.map((n) => n[0])
-														.join("")}
-												</AvatarFallback>
-											</Avatar>
-											<div className="flex-1 min-w-0">
-												<h3 className="text-sm font-medium text-gray-900 truncate">
-													{member.name}
-												</h3>
-												<p className="text-sm text-gray-500 truncate">
-													{member.email}
+							<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+								{members.map((member) => (
+									<Card
+										key={member.clerkId}
+										className="cursor-pointer hover:shadow-md transition-shadow"
+									>
+										<CardContent className="flex flex-col p-4 space-y-3">
+											<div className="flex items-start gap-4">
+												<Avatar>
+													<AvatarImage src={member.avatar} />
+													<AvatarFallback>
+														{member.name
+															.split(" ")
+															.map((n) => n[0])
+															.join("")}
+													</AvatarFallback>
+												</Avatar>
+												<div className="flex-1 min-w-0">
+													<h3 className="text-sm font-medium text-gray-900 truncate">
+														{member.name}
+													</h3>
+													<p className="text-sm text-gray-500 truncate">
+														{member.email}
+													</p>
+												</div>
+											</div>
+											<div className="flex items-center justify-end">
+												<p className="text-xs text-gray-400">
+													Joined {formatDate(member.createdAt)}
 												</p>
 											</div>
-										</div>
-										<div className="flex items-center justify-end">
-											<p className="text-xs text-gray-400">
-												Joined {formatDate(member.createdAt)}
-											</p>
-										</div>
-									</CardContent>
-								</Card>
-							))}
+										</CardContent>
+									</Card>
+								))}
+							</div>
 						</div>
-					</div>
-				))}
+					)
+				)}
 			</div>
 
 			{isOpen && !selectedAction && (
@@ -196,9 +222,7 @@ export default function Teams() {
 						<TeamsAction
 							teamId={selectedTeam}
 							mode={selectedAction}
-							onMemberUpdate={(memberId, teamId, action) =>
-								handleTeamAction({ memberId, teamId, action })
-							}
+							onMemberUpdate={handleTeamAction}
 							onClose={handleClose}
 						/>
 					</div>

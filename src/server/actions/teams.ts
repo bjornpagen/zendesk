@@ -6,12 +6,18 @@ import { auth } from "@clerk/nextjs/server"
 import { and, eq, ilike, or, type SQL } from "drizzle-orm"
 
 export type TeamMember = {
-	id: string // Using clerk_id as the id
+	clerkId: string
 	name: string
 	email: string
 	avatar: string
 	team: string
+	teamId: string
 	createdAt: Date
+}
+
+export type Team = {
+	id: string
+	name: string
 }
 
 /**
@@ -24,7 +30,7 @@ export async function getTeamMembers(searchQuery = ""): Promise<TeamMember[]> {
 		throw new Error("Unauthorized")
 	}
 
-	const { users, teams, teamMembers } = schema
+	const { users, teams } = schema
 
 	const conditions: SQL[] = []
 	if (searchQuery) {
@@ -37,18 +43,54 @@ export async function getTeamMembers(searchQuery = ""): Promise<TeamMember[]> {
 
 	const members = await db
 		.select({
-			id: users.clerkId,
+			clerkId: users.clerkId,
 			name: users.name,
 			email: users.email,
 			avatar: users.avatar,
 			team: teams.name,
-			createdAt: teamMembers.createdAt
+			teamId: teams.id,
+			createdAt: users.createdAt
 		})
 		.from(users)
-		.innerJoin(teamMembers, eq(teamMembers.userId, users.clerkId))
-		.innerJoin(teams, eq(teams.id, teamMembers.teamId))
+		.innerJoin(teams, eq(teams.id, users.teamId))
 		.where(and(...conditions))
 		.orderBy(users.name)
 
 	return members
+}
+
+/**
+ * Change a user's team
+ */
+export async function changeTeam(userId: string, teamId: string) {
+	const { userId: clerkId } = await auth()
+	if (!clerkId) {
+		throw new Error("Unauthorized")
+	}
+
+	await db
+		.update(schema.users)
+		.set({ teamId })
+		.where(eq(schema.users.clerkId, userId))
+}
+
+export async function getTeam(teamId: string): Promise<Team> {
+	const { userId: clerkId } = await auth()
+	if (!clerkId) {
+		throw new Error("Unauthorized")
+	}
+
+	const team = await db
+		.select({
+			id: schema.teams.id,
+			name: schema.teams.name
+		})
+		.from(schema.teams)
+		.where(eq(schema.teams.id, teamId))
+		.then((rows) => rows[0])
+
+	if (!team) {
+		throw new Error(`Team not found: ${teamId}`)
+	}
+	return team
 }
