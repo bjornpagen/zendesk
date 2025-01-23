@@ -230,8 +230,8 @@ export default function Thread() {
 
 	return (
 		<Sheet defaultOpen open onOpenChange={handleClose}>
-			<SheetContent className="sm:max-w-[800px] p-0 flex">
-				<div className="w-[400px] flex flex-col bg-muted">
+			<SheetContent className="sm:max-w-[1200px] p-0 flex">
+				<div className="w-[350px] flex flex-col bg-muted">
 					<div className="w-full flex flex-col h-full">
 						<div className="p-4 border-b">
 							<SheetHeader className="mb-4">
