@@ -20,7 +20,12 @@ export async function createInvitation(email: string) {
 				invitedBy: clerkId
 			}
 		})
-		return invitation
+		// Return only the necessary serializable data
+		return {
+			id: invitation.id,
+			emailAddress: invitation.emailAddress,
+			status: invitation.status
+		}
 	} catch (error: any) {
 		// Log the detailed error for debugging
 		console.error("Clerk invitation error:", {
