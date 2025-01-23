@@ -93,14 +93,90 @@ async function main() {
 
 	// biome-ignore lint/suspicious/noConsole: Acceptable in seed script for progress tracking
 	console.log("Seeding customers...")
-	const customerCount = 40 // Changed from 10
+	const customerCount = 40
 	const createdCustomers = await db
 		.insert(schema.customers)
 		.values(
-			Array.from({ length: customerCount }).map(() => ({
-				email: faker.internet.email(),
-				name: faker.person.fullName()
-			}))
+			Array.from({ length: customerCount }).map(() => {
+				// Generate random metadata fields
+				const metadataFieldCount = faker.number.int({ min: 1, max: 5 })
+				const metadata: Record<string, string> = {}
+
+				for (let i = 0; i < metadataFieldCount; i++) {
+					// Generate random key-value pairs
+					const key = faker.helpers.arrayElement([
+						"phone",
+						"address",
+						"company",
+						"industry",
+						"subscription",
+						"plan",
+						"source",
+						"language",
+						"timezone",
+						"notes"
+					])
+
+					// Generate appropriate value based on the key
+					let value: string
+					switch (key) {
+						case "phone":
+							value = faker.phone.number()
+							break
+						case "address":
+							value = faker.location.streetAddress()
+							break
+						case "company":
+							value = faker.company.name()
+							break
+						case "industry":
+							value = faker.company.buzzNoun()
+							break
+						case "subscription":
+							value = faker.helpers.arrayElement([
+								"free",
+								"basic",
+								"premium",
+								"enterprise"
+							])
+							break
+						case "plan":
+							value = faker.helpers.arrayElement([
+								"monthly",
+								"annual",
+								"lifetime"
+							])
+							break
+						case "source":
+							value = faker.helpers.arrayElement([
+								"website",
+								"referral",
+								"ads",
+								"social"
+							])
+							break
+						case "language":
+							value = faker.helpers.arrayElement(["en", "es", "fr", "de", "pt"])
+							break
+						case "timezone":
+							value = faker.location.timeZone()
+							break
+						case "notes":
+							value = faker.lorem.sentence()
+							break
+						default:
+							value = faker.word.sample()
+					}
+
+					metadata[key] = value
+				}
+
+				return {
+					email: faker.internet.email(),
+					name: faker.person.fullName(),
+					metadata
+				}
+			})
 		)
 		.returning()
 

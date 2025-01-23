@@ -6,7 +6,8 @@ import {
 	text,
 	check,
 	integer,
-	index
+	index,
+	jsonb
 } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 import { relations } from "drizzle-orm"
@@ -29,7 +30,11 @@ export const customers = createTable(
 		id: char("id", { length: 24 }).primaryKey().notNull().$default(createId),
 		...timestamps,
 		email: text("email").notNull().unique(),
-		name: text("name").notNull()
+		name: text("name").notNull(),
+		metadata: jsonb("metadata")
+			.$type<Record<string, string>>()
+			.notNull()
+			.default({})
 	},
 	(table) => ({
 		emailIndex: index("customers_email_idx").on(table.email)

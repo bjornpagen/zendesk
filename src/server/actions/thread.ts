@@ -36,7 +36,7 @@ export async function getThread(threadId: string) {
 		.set({ lastReadAt: new Date() })
 		.where(eq(schema.threads.id, threadId))
 
-	// Fetch thread data
+	// Fetch thread data with customer metadata
 	const thread = await db.query.threads.findFirst({
 		where: eq(schema.threads.id, threadId),
 		columns: {
@@ -49,6 +49,14 @@ export async function getThread(threadId: string) {
 			problem: {
 				columns: {
 					title: true
+				}
+			},
+			customer: {
+				columns: {
+					id: true,
+					name: true,
+					email: true,
+					metadata: true
 				}
 			},
 			messages: {

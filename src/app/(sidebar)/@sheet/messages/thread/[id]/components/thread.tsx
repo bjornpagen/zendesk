@@ -15,10 +15,26 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
-import { Paperclip, ArrowUp, X } from "lucide-react"
-
+import { Paperclip, ArrowUp, X, Plus } from "lucide-react"
+import { Label } from "@/components/ui/label"
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+	DialogFooter
+} from "@/components/ui/dialog"
+import { Pencil } from "lucide-react"
+import { Input } from "@/components/ui/input"
 import { ChangeThreadPropertyDialog } from "./change-thread-property-dialog"
 import { formatDate } from "@/lib/format"
+import {
+	addMetadataField,
+	updateMetadataField,
+	deleteMetadataField
+} from "@/server/actions/metadata"
+import { getCustomerMetadata } from "@/server/actions/metadata"
 
 import Image from "next/image"
 
@@ -50,54 +66,6 @@ const capitalizeFirstLetter = (string: string) => {
 	return string.charAt(0).toUpperCase() + string.slice(1)
 }
 
-const MOCK_CUSTOMER_OBJECT = {
-	email: "sarah.parker@acme.co",
-	name: "Sarah Parker",
-	metadata: {
-		Company: "Acme Corporation",
-		"Phone Number": "+1 (555) 123-4567",
-		"Job Title": "Senior Product Manager",
-		Location: "San Francisco, CA",
-		"Time Zone": "PST",
-		"Latest Purchase": "Enterprise Plan - 2024",
-		"Account Type": "Enterprise",
-		"Customer Since": "2022",
-		"Last Login": "2 hours ago",
-		"Support Tickets": "12 open, 47 resolved",
-		"Billing Status": "Active - Auto-renewal",
-		"Payment Method": "Visa ending in 4242",
-		"Monthly Revenue": "$12,500",
-		"Team Size": "250+ employees",
-		Industry: "Software & Technology",
-		Website: "acme.corporation.com",
-		"Integration Type": "API + Widget",
-		"API Usage": "2.3M requests/month",
-		"Feature Access": "All Enterprise Features",
-		"Contract Term": "36 months",
-		"Renewal Date": "Dec 31, 2024",
-		CSM: "John Smith",
-		"NPS Score": "9/10",
-		Language: "English (US)",
-		"Security Level": "SOC2 Compliant",
-		"2FA Status": "Enabled",
-		"Custom Domain": "help.acme.co",
-		"Data Center": "US-West",
-		"Account Health": "Excellent",
-		"Training Status": "Completed",
-		"Support SLA": "Premium - 1h response",
-		"API Version": "v2.1.4"
-	}
-}
-
-const renderMetadataField = (key: string, value: string) => {
-	return (
-		<div key={key} className="flex flex-col space-y-1">
-			<dt className="text-sm text-muted-foreground">{key}</dt>
-			<dd className="text-sm font-medium">{value}</dd>
-		</div>
-	)
-}
-
 export default function Thread() {
 	const params = useParams()
 	const router = useRouter()
@@ -112,10 +80,19 @@ export default function Thread() {
 		isOpen: boolean
 		propertyType: "status" | "priority" | "problem"
 	}>({ isOpen: false, propertyType: "status" })
+	const [isAddMetadataOpen, setIsAddMetadataOpen] = useState(false)
+	const [isEditMetadataOpen, setIsEditMetadataOpen] = useState<string | null>(
+		null
+	)
 
 	const { data: thread, mutate } = useSWR(
 		params.id ? ["thread", params.id] : null,
 		() => getThread(params.id as string)
+	)
+
+	const { data: customerMetadata, mutate: mutateMetadata } = useSWR(
+		thread?.customer?.id ? ["customerMetadata", thread.customer.id] : null,
+		([_, id]) => getCustomerMetadata(id)
 	)
 
 	useEffect(() => {
@@ -201,9 +178,50 @@ export default function Thread() {
 		setChangePropertyDialog({ isOpen: true, propertyType })
 	}
 
-	const handlePropertyChange = (newValue: string) => {
-		// TODO: Implement server action to update thread properties
-		// For now, we'll rely on revalidation from useSWR
+	const handlePropertyChange = async () => {
+		await mutate()
+		await mutateMetadata()
+	}
+
+	const handleAddMetadata = async (key: string, value: string) => {
+		if (!thread) {
+			return
+		}
+
+		try {
+			await addMetadataField(thread.customer.id, key, value)
+			await mutateMetadata()
+			setIsAddMetadataOpen(false)
+		} catch (error) {
+			console.error("Failed to add metadata:", error)
+		}
+	}
+
+	const handleUpdateMetadata = async (key: string, value: string) => {
+		if (!thread) {
+			return
+		}
+
+		try {
+			await updateMetadataField(thread.customer.id, key, value)
+			await mutateMetadata()
+			setIsEditMetadataOpen(null)
+		} catch (error) {
+			console.error("Failed to update metadata:", error)
+		}
+	}
+
+	const handleDeleteMetadata = async (key: string) => {
+		if (!thread) {
+			return
+		}
+
+		try {
+			await deleteMetadataField(thread.customer.id, key)
+			await mutateMetadata()
+		} catch (error) {
+			console.error("Failed to delete metadata:", error)
+		}
 	}
 
 	if (!thread) {
@@ -213,39 +231,159 @@ export default function Thread() {
 	return (
 		<Sheet defaultOpen open onOpenChange={handleClose}>
 			<SheetContent className="sm:max-w-[800px] p-0 flex">
-				<div className="w-[300px] flex flex-col">
-					<div className="p-6">
-						<SheetHeader className="mb-6">
-							<SheetTitle>Customer Details</SheetTitle>
-						</SheetHeader>
+				<div className="w-[320px] flex flex-col bg-muted">
+					<div className="w-full flex flex-col h-full">
+						<div className="p-4 border-b">
+							<SheetHeader className="mb-4">
+								<SheetTitle className="text-lg">Customer Details</SheetTitle>
+							</SheetHeader>
 
-						{/* Primary Fields */}
-						<div className="mb-6">
-							<div className="mb-4">
-								<div className="text-sm text-muted-foreground">Name</div>
-								<div className="text-sm font-medium">
-									{MOCK_CUSTOMER_OBJECT.name}
+							<div className="space-y-2">
+								<div>
+									<Label className="text-xs text-muted-foreground">Name</Label>
+									<div className="text-sm font-medium">
+										{thread.customer?.name}
+									</div>
 								</div>
-							</div>
-							<div>
-								<div className="text-sm text-muted-foreground">Email</div>
-								<div className="text-sm font-medium">
-									{MOCK_CUSTOMER_OBJECT.email}
+								<div>
+									<Label className="text-xs text-muted-foreground">Email</Label>
+									<div className="text-sm font-medium">
+										{thread.customer?.email}
+									</div>
 								</div>
 							</div>
 						</div>
-					</div>
 
-					{/* Scrollable Metadata Fields */}
-					<ScrollArea className="flex-1 px-6 pb-6">
-						<dl className="space-y-4">
-							{Object.entries(MOCK_CUSTOMER_OBJECT.metadata).map(
-								([key, value]) => renderMetadataField(key, value)
-							)}
-						</dl>
-					</ScrollArea>
+						<ScrollArea className="flex-1 px-4 pt-4">
+							<div className="space-y-2 pb-4">
+								{customerMetadata &&
+									Object.entries(customerMetadata).map(([key, value]) => (
+										<div key={key} className="group">
+											<Label className="text-xs text-muted-foreground capitalize">
+												{key}
+											</Label>
+											<div className="flex items-center justify-between">
+												<span className="text-sm font-medium truncate max-w-[230px]">
+													{value}
+												</span>
+												<div className="flex items-center opacity-0 group-hover:opacity-100">
+													<Dialog
+														open={isEditMetadataOpen === key}
+														onOpenChange={() => setIsEditMetadataOpen(null)}
+													>
+														<DialogTrigger
+															asChild
+															onClick={(e) => {
+																e.preventDefault()
+																setIsEditMetadataOpen(key)
+															}}
+														>
+															<Button
+																variant="ghost"
+																size="sm"
+																className="h-6 w-6 p-0"
+															>
+																<Pencil className="h-3 w-3" />
+															</Button>
+														</DialogTrigger>
+														<DialogContent>
+															<DialogHeader>
+																<DialogTitle>Edit {key}</DialogTitle>
+															</DialogHeader>
+															<form
+																onSubmit={async (e) => {
+																	e.preventDefault()
+																	const formData = new FormData(e.currentTarget)
+																	const newValue = formData.get(
+																		"value"
+																	) as string
+																	await handleUpdateMetadata(key, newValue)
+																}}
+															>
+																<div className="py-4">
+																	<Label htmlFor={`edit-${key}`}>Value</Label>
+																	<Input
+																		id={`edit-${key}`}
+																		name="value"
+																		defaultValue={value}
+																		className="mt-2"
+																	/>
+																</div>
+																<DialogFooter>
+																	<Button type="submit">Save changes</Button>
+																</DialogFooter>
+															</form>
+														</DialogContent>
+													</Dialog>
+													<Button
+														variant="ghost"
+														size="sm"
+														className="h-6 w-6 p-0 text-destructive"
+														onClick={() => handleDeleteMetadata(key)}
+													>
+														<X className="h-3 w-3" />
+													</Button>
+												</div>
+											</div>
+										</div>
+									))}
+							</div>
+						</ScrollArea>
+
+						<div className="p-4 pt-2 border-t">
+							<Dialog
+								open={isAddMetadataOpen}
+								onOpenChange={setIsAddMetadataOpen}
+							>
+								<DialogTrigger asChild>
+									<Button variant="outline" className="w-full">
+										<Plus className="h-4 w-4 mr-2" />
+										Add Metadata
+									</Button>
+								</DialogTrigger>
+								<DialogContent>
+									<DialogHeader>
+										<DialogTitle>Add Metadata Field</DialogTitle>
+									</DialogHeader>
+									<form
+										onSubmit={async (e) => {
+											e.preventDefault()
+											const formData = new FormData(e.currentTarget)
+											const key = formData.get("key") as string
+											const value = formData.get("value") as string
+											await handleAddMetadata(key, value)
+										}}
+									>
+										<div className="space-y-4 py-4">
+											<div>
+												<Label htmlFor="key">Field Name</Label>
+												<Input
+													id="key"
+													name="key"
+													placeholder="Enter field name"
+													className="mt-2"
+												/>
+											</div>
+											<div>
+												<Label htmlFor="value">Value</Label>
+												<Input
+													id="value"
+													name="value"
+													placeholder="Enter value"
+													className="mt-2"
+												/>
+											</div>
+										</div>
+										<DialogFooter>
+											<Button type="submit">Add Field</Button>
+										</DialogFooter>
+									</form>
+								</DialogContent>
+							</Dialog>
+						</div>
+					</div>
 				</div>
-				<div className="flex-1 flex flex-col border-l">
+				<div className="flex-1 flex flex-col">
 					<div className="p-4">
 						<SheetHeader className="mb-4">
 							<SheetTitle>{thread.subject}</SheetTitle>
