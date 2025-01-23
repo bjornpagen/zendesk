@@ -7,7 +7,11 @@ import "./src/env.js"
 /** @type {import("next").NextConfig} */
 const config = {
 	images: {
-		domains: ["picsum.photos", "s3.us-east-2.amazonaws.com"]
+		domains: [
+			"picsum.photos",
+			"s3.us-east-2.amazonaws.com",
+			"images.unsplash.com"
+		]
 	},
 	experimental: {
 		serverActions: {
