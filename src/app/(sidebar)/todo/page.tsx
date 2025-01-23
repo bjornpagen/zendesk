@@ -31,12 +31,6 @@ export default function TodoPage() {
 			priority: "high"
 		},
 		{
-			title: "Customer Information Management",
-			description:
-				"Add customer information tab to sidebar for managing customer profiles, contact details, and interaction history",
-			priority: "medium"
-		},
-		{
 			title: "Add Build Widget Script",
 			description:
 				"Implement functionality to generate and customize widget installation script",
