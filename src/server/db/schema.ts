@@ -47,11 +47,13 @@ export const users = createTable(
 			.references(() => teams.id),
 		avatar: text("avatar").notNull(),
 		email: text("email").notNull().unique(),
-		name: text("name").notNull()
+		name: text("name").notNull(),
+		role: text("role").$type<"member" | "admin">().notNull().default("member")
 	},
 	(table) => ({
 		emailIndex: index("users_email_idx").on(table.email),
-		teamIdIndex: index("users_team_id_idx").on(table.teamId)
+		teamIdIndex: index("users_team_id_idx").on(table.teamId),
+		roleIndex: index("users_role_idx").on(table.role)
 	})
 )
 
@@ -185,7 +187,6 @@ export const teamMembers = createTable(
 		teamId: char("team_id", { length: 24 })
 			.notNull()
 			.references(() => teams.id),
-		role: text("role").$type<"member" | "admin">().notNull().default("member"),
 		lastAssignedAt: timestamp("last_assigned_at"),
 		...timestamps
 	},

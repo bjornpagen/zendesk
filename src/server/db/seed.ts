@@ -72,7 +72,7 @@ async function main() {
 
 	// biome-ignore lint/suspicious/noConsole: Acceptable in seed script for progress tracking
 	console.log("Seeding users...")
-	const userCount = 40 // Changed from 10
+	const userCount = 40
 	const createdUsers = await db
 		.insert(schema.users)
 		.values(
@@ -82,7 +82,12 @@ async function main() {
 				teamId: index < 3 ? defaultTeam.id : randomItem(createdTeams).id,
 				avatar: faker.image.avatar(),
 				email: faker.internet.email(),
-				name: faker.person.fullName()
+				name: faker.person.fullName(),
+				// Make first user admin, rest are random
+				role:
+					index === 0
+						? "admin"
+						: faker.helpers.arrayElement(["admin", "member"])
 			}))
 		)
 		.returning()
@@ -227,17 +232,9 @@ async function main() {
 		Omit<typeof schema.teamMembers.$inferInsert, "createdAt" | "updatedAt">
 	> = []
 	for (const user of createdUsers) {
-		// Make first user in default team an admin
-		const role = (() => {
-			if (user.teamId === defaultTeam.id && teamMemberInserts.length === 0) {
-				return "admin"
-			}
-			return faker.datatype.boolean() ? "admin" : "member"
-		})()
 		teamMemberInserts.push({
 			userId: user.clerkId,
 			teamId: user.teamId,
-			role,
 			lastAssignedAt: faker.datatype.boolean()
 				? faker.date.recent({ days: 100 })
 				: null

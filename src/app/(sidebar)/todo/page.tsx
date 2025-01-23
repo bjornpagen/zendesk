@@ -37,12 +37,6 @@ export default function TodoPage() {
 			priority: "high"
 		},
 		{
-			title: "Support Multiple File Attachments",
-			description:
-				"Update messages schema and UI to allow multiple file attachments per message",
-			priority: "high"
-		},
-		{
 			title: "Real-time Notifications",
 			description:
 				"Implement Supabase webhook and SSE integration for real-time updates and notifications across the application",
@@ -58,6 +52,12 @@ export default function TodoPage() {
 			title: "Add Build Widget Script",
 			description:
 				"Implement functionality to generate and customize widget installation script",
+			priority: "medium"
+		},
+		{
+			title: "Support Multiple File Attachments",
+			description:
+				"Update messages schema and UI to allow multiple file attachments per message",
 			priority: "medium"
 		},
 		{

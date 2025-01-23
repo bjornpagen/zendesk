@@ -12,7 +12,10 @@ export async function syncUser(): Promise<void> {
 	}
 
 	const existing = await db
-		.select()
+		.select({
+			clerkId: schema.users.clerkId,
+			updatedAt: schema.users.updatedAt
+		})
 		.from(schema.users)
 		.where(eq(schema.users.clerkId, user.id))
 		.limit(1)
@@ -20,7 +23,9 @@ export async function syncUser(): Promise<void> {
 
 	// Get or create default team
 	const defaultTeam = await db
-		.select()
+		.select({
+			id: schema.teams.id
+		})
 		.from(schema.teams)
 		.where(eq(schema.teams.name, "Default Team"))
 		.limit(1)
@@ -44,8 +49,7 @@ export async function syncUser(): Promise<void> {
 		// Add them to the default team
 		await db.insert(schema.teamMembers).values({
 			userId: user.id,
-			teamId: defaultTeam.id,
-			role: "member"
+			teamId: defaultTeam.id
 		})
 
 		return
