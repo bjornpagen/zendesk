@@ -27,12 +27,8 @@ export const env = createEnv({
 	 */
 	client: {
 		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string(),
-		NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL: z.literal(
-			"https://zendesk-sable.vercel.app/messages?status=open&needsResponse=true"
-		),
-		NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL: z.literal(
-			"https://zendesk-sable.vercel.app/messages?status=open&needsResponse=true"
-		)
+		NEXT_PUBLIC_CLERK_SIGN_IN_URL: z.literal("/sign-in"),
+		NEXT_PUBLIC_CLERK_SIGN_UP_URL: z.literal("/sign-up")
 	},
 
 	/**
@@ -51,10 +47,8 @@ export const env = createEnv({
 		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
 			process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
 		CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
-		NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL:
-			process.env.NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL,
-		NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL:
-			process.env.NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL
+		NEXT_PUBLIC_CLERK_SIGN_IN_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL,
+		NEXT_PUBLIC_CLERK_SIGN_UP_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL
 	},
 	/**
 	 * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

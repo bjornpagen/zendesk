@@ -1,5 +1,4 @@
 "use server"
-import { env } from "@/env"
 import { clerk } from "@/server/clerk"
 import { auth } from "@clerk/nextjs/server"
 
@@ -19,7 +18,7 @@ export async function createInvitation(email: string, teamId: string) {
 
 	const invitation = await clerk.invitations.createInvitation({
 		emailAddress: email.trim(),
-		redirectUrl: env.NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL,
+		redirectUrl: "https://zendesk-sable.vercel.app/sign-in",
 		publicMetadata: {
 			invitedBy: clerkId,
 			teamId: teamId
