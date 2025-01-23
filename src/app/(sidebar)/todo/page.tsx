@@ -19,12 +19,6 @@ interface Todo {
 export default function TodoPage() {
 	const todos = [
 		{
-			title: "Support Organizations",
-			description:
-				"Add support for organizations to the app, allowing users to manage multiple teams within a single account",
-			priority: "high"
-		},
-		{
 			title: "Real-time Notifications",
 			description:
 				"Implement Supabase webhook and SSE integration for real-time updates and notifications across the application",
@@ -41,6 +35,12 @@ export default function TodoPage() {
 			description:
 				"Update messages schema and UI to allow multiple file attachments per message",
 			priority: "medium"
+		},
+		{
+			title: "Support Organizations",
+			description:
+				"Add support for organizations to the app, allowing users to manage multiple teams within a single account",
+			priority: "low"
 		},
 		{
 			title: "Analytics Dashboard",
