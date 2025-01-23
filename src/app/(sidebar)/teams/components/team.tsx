@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Search, UserPlus, UserMinus } from "lucide-react"
+import { Search, UserPlus, UserMinus, Mail } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { formatDate } from "@/lib/format"
 import { useTeamFilters } from "@/hooks/use-team-filters"
@@ -24,9 +24,9 @@ export default function Teams() {
 		updateSearchParams
 	} = useTeamFilters()
 
-	const [selectedAction, setSelectedAction] = useState<"add" | "remove" | null>(
-		null
-	)
+	const [selectedAction, setSelectedAction] = useState<
+		"add" | "remove" | "invite" | null
+	>(null)
 	const [selectedTeam, setSelectedTeam] = useState<string | null>(null)
 
 	// Group members by team and store team IDs
@@ -60,7 +60,11 @@ export default function Teams() {
 	}
 
 	const handleTeamAction = useCallback(
-		async (memberId: string, teamId: string, action: "add" | "remove") => {
+		async (
+			memberId: string,
+			teamId: string,
+			action: "add" | "remove" | "invite"
+		) => {
 			try {
 				switch (action) {
 					case "add":
@@ -68,6 +72,9 @@ export default function Teams() {
 						break
 					case "remove":
 						await removeTeamMember(memberId, teamId)
+						break
+					case "invite":
+						// No-op since invite is handled directly in TeamsAction
 						break
 				}
 				await mutate((key) => Array.isArray(key) && key[0] === "teamMembers")
@@ -129,6 +136,19 @@ export default function Teams() {
 									</span>
 								</div>
 								<div className="flex gap-2">
+									<Button
+										variant="outline"
+										size="sm"
+										onClick={() => {
+											setSelectedAction("invite")
+											setSelectedTeam(teamId)
+											handleOpenChange(true)
+										}}
+										title={`Invite new member to ${teamLabels[teamName]}`}
+									>
+										<Mail className="h-4 w-4 mr-2" />
+										Invite
+									</Button>
 									<Button
 										variant="outline"
 										size="sm"

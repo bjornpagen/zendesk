@@ -165,7 +165,7 @@ export default function LandingPage() {
 						className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0"
 						asChild
 					>
-						<Link href="/messages">
+						<Link href="/messages?status=open&needsResponse=true">
 							Get Started <ArrowRight className="h-4 w-4" />
 						</Link>
 					</Button>

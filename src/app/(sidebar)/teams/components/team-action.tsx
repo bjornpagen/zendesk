@@ -16,14 +16,16 @@ import {
 	getAvailableUsers
 } from "@/server/actions/team-members"
 import { getTeam } from "@/server/actions/teams"
+import { createInvitation } from "@/server/actions/invitations"
+import { UserPlus } from "lucide-react"
 
 interface GroupActionProps {
 	teamId: string
-	mode: "add" | "remove"
+	mode: "add" | "remove" | "invite"
 	onMemberUpdate: (
 		memberId: string,
 		teamId: string,
-		action: "add" | "remove"
+		action: "add" | "remove" | "invite"
 	) => void
 	onClose?: () => void
 }
@@ -55,6 +57,39 @@ export function TeamsAction({
 		} catch (error) {
 			console.error("Failed to update team member:", error)
 		}
+	}
+
+	if (mode === "invite") {
+		return (
+			<Command className="rounded-lg border shadow-md w-[450px]">
+				<CommandInput
+					ref={inputRef}
+					autoFocus
+					placeholder="Enter email address to invite..."
+					value={searchText}
+					onValueChange={setSearchText}
+				/>
+				<CommandList>
+					<CommandGroup heading="Invite new member">
+						<CommandItem
+							onSelect={async () => {
+								try {
+									await createInvitation(searchText)
+									onClose?.()
+								} catch (error) {
+									console.error("Failed to invite user:", error)
+								}
+							}}
+							disabled={!searchText.includes("@")}
+						>
+							<UserPlus className="h-4 w-4 mr-2" />
+							<span>Invite {searchText}</span>
+						</CommandItem>
+					</CommandGroup>
+					<CommandEmpty>Enter a valid email address to invite</CommandEmpty>
+				</CommandList>
+			</Command>
+		)
 	}
 
 	return (

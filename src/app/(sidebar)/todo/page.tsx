@@ -19,12 +19,6 @@ interface Todo {
 export default function TodoPage() {
 	const todos = [
 		{
-			title: "Admin User Management",
-			description:
-				"Implement functionality for admin users who can manage teams, settings, and have full system access",
-			priority: "high"
-		},
-		{
 			title: "Support Agent Management",
 			description:
 				"Add support agent role with limited permissions focused on ticket handling and customer interactions",
