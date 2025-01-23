@@ -21,17 +21,17 @@ export async function syncUser(): Promise<void> {
 		.limit(1)
 		.then(([user]) => user)
 
-	// Get or create default team
-	const defaultTeam = await db
+	// Get oldest team
+	const oldestTeam = await db
 		.select({
 			id: schema.teams.id
 		})
 		.from(schema.teams)
-		.where(eq(schema.teams.name, "Default Team"))
+		.orderBy(schema.teams.createdAt)
 		.limit(1)
 		.then(([team]) => team)
-	if (!defaultTeam) {
-		throw new Error("Default team not found")
+	if (!oldestTeam) {
+		throw new Error("No teams found")
 	}
 
 	if (!existing) {
@@ -43,13 +43,7 @@ export async function syncUser(): Promise<void> {
 				: user.username || "Anonymous",
 			avatar: user.imageUrl,
 			email: user.emailAddresses[0]?.emailAddress || "",
-			teamId: defaultTeam.id
-		})
-
-		// Add them to the default team
-		await db.insert(schema.teamMembers).values({
-			userId: user.id,
-			teamId: defaultTeam.id
+			teamId: oldestTeam.id
 		})
 
 		return
