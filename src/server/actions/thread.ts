@@ -378,23 +378,70 @@ export async function updateThreadProperty(
 		throw new Error("Unauthorized")
 	}
 
+	// Create update object based on property
+	const updateData: Record<string, unknown> = {
+		[property]: value,
+		lastReadAt: new Date() // Update read timestamp
+	}
+
+	// If updating status, also update statusChangedAt
+	if (property === "status") {
+		updateData.statusChangedAt = new Date()
+	}
+
 	const updatedThread = await db
 		.update(schema.threads)
-		.set({
-			[property]: value,
-			lastReadAt: new Date() // Update read timestamp
-		})
+		.set(updateData)
 		.where(eq(schema.threads.id, threadId))
 		.returning({
 			id: schema.threads.id,
 			status: schema.threads.status,
 			priority: schema.threads.priority,
-			problemId: schema.threads.problemId
+			problemId: schema.threads.problemId,
+			statusChangedAt: schema.threads.statusChangedAt
 		})
 		.then(([thread]) => thread)
 
 	if (!updatedThread) {
 		throw new Error("Failed to update thread")
+	}
+
+	return updatedThread
+}
+
+/**
+ * Assign a thread to a staff member
+ */
+export async function assignThread(
+	threadId: string,
+	assignedToClerkId: string | null
+) {
+	const { userId: clerkId } = await auth()
+	if (!clerkId) {
+		throw new Error("Unauthorized")
+	}
+
+	const updateData: Record<string, unknown> = {
+		assignedToClerkId,
+		lastReadAt: new Date()
+	}
+
+	// If assigning to someone, set assignedAt; if unassigning, set to null
+	updateData.assignedAt = assignedToClerkId ? new Date() : null
+
+	const updatedThread = await db
+		.update(schema.threads)
+		.set(updateData)
+		.where(eq(schema.threads.id, threadId))
+		.returning({
+			id: schema.threads.id,
+			assignedToClerkId: schema.threads.assignedToClerkId,
+			assignedAt: schema.threads.assignedAt
+		})
+		.then(([thread]) => thread)
+
+	if (!updatedThread) {
+		throw new Error("Failed to update thread assignment")
 	}
 
 	return updatedThread

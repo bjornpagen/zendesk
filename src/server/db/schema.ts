@@ -144,6 +144,10 @@ export const threads = createTable(
 		subject: text("subject").notNull(),
 		lastReadAt: timestamp("last_read_at")
 			.notNull()
+			.$default(() => new Date()),
+		assignedAt: timestamp("assigned_at"),
+		statusChangedAt: timestamp("status_changed_at")
+			.notNull()
 			.$default(() => new Date())
 	},
 	(table) => ({
@@ -153,7 +157,19 @@ export const threads = createTable(
 		customerIdIndex: index("threads_customer_id_idx").on(table.customerId),
 		problemIdIndex: index("threads_problem_id_idx").on(table.problemId),
 		priorityIndex: index("threads_priority_idx").on(table.priority),
-		statusIndex: index("threads_status_idx").on(table.status)
+		statusIndex: index("threads_status_idx").on(table.status),
+		assignedAtNullCheck: check(
+			"assigned_at_null_check",
+			sql`(
+				(${table.assignedToClerkId} IS NULL AND ${table.assignedAt} IS NULL)
+				OR
+				(${table.assignedToClerkId} IS NOT NULL AND ${table.assignedAt} IS NOT NULL)
+			)`
+		),
+		statusChangedAtCheck: check(
+			"status_changed_at_check",
+			sql`${table.statusChangedAt} >= ${table.createdAt}`
+		)
 	})
 )
 

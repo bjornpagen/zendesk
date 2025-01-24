@@ -203,29 +203,59 @@ async function main() {
 
 	// biome-ignore lint/suspicious/noConsole: Acceptable in seed script for progress tracking
 	console.log("Seeding threads...")
-	const threadCount = 60 // Changed from 15
+	const threadCount = 60
 	const createdThreads = await db
 		.insert(schema.threads)
 		.values(
-			Array.from({ length: threadCount }).map(() => ({
-				customerId: randomItem(createdCustomers).id,
-				problemId: faker.datatype.boolean()
-					? randomItem(createdProblems).id
-					: null,
-				assignedToClerkId: faker.datatype.boolean()
+			Array.from({ length: threadCount }).map(() => {
+				// Generate base timestamp for consistency
+				const createdAtDate = faker.date.recent({ days: 30 })
+
+				// Determine if thread will be assigned
+				const willBeAssigned = faker.datatype.boolean()
+				const assignedToClerkId = willBeAssigned
 					? randomItem(createdUsers).clerkId
-					: null,
-				priority: faker.helpers.arrayElement<"urgent" | "non-urgent">([
-					"urgent",
-					"non-urgent"
-				]),
-				status: faker.helpers.arrayElement<"open" | "closed" | "spam">([
+					: null
+
+				// If assigned, assignedAt must be after creation but before now
+				const assignedAt = willBeAssigned
+					? faker.date.between({
+							from: createdAtDate,
+							to: new Date()
+						})
+					: null
+
+				// Generate status and its change time
+				const status = faker.helpers.arrayElement<"open" | "closed" | "spam">([
 					"open",
 					"closed",
 					"spam"
-				]),
-				subject: faker.lorem.sentence()
-			}))
+				])
+
+				// Status change must be after creation
+				const statusChangedAt = faker.date.between({
+					from: createdAtDate,
+					to: new Date()
+				})
+
+				return {
+					customerId: randomItem(createdCustomers).id,
+					problemId: faker.datatype.boolean()
+						? randomItem(createdProblems).id
+						: null,
+					assignedToClerkId,
+					assignedAt,
+					priority: faker.helpers.arrayElement<"urgent" | "non-urgent">([
+						"urgent",
+						"non-urgent"
+					]),
+					status,
+					statusChangedAt,
+					subject: faker.lorem.sentence(),
+					createdAt: createdAtDate,
+					updatedAt: statusChangedAt // Use the latest known change as updatedAt
+				}
+			})
 		)
 		.returning()
 
