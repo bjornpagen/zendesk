@@ -20,6 +20,7 @@ export async function POST(request: Request) {
 
 		// Process the message record
 		const record = payload.record
+		const threadId = record.thread_id
 
 		// TODO: Add any additional processing logic here
 		// For example: Send notifications, update analytics, etc.
