@@ -97,40 +97,61 @@ export default function Thread() {
 
 	useEffect(() => {
 		if (thread && messageId) {
-			const targetMessageId = messageId
-			setHighlightedMessageId(targetMessageId)
+			setHighlightedMessageId(messageId)
 
-			setTimeout(() => {
-				const targetElement = document.getElementById(
-					`message-${targetMessageId}`
-				)
-				if (targetElement) {
-					targetElement.scrollIntoView({ behavior: "smooth", block: "end" })
+			let attempts = 0
+			const maxAttempts = 3
+
+			const tryScroll = () => {
+				const targetElement = document.getElementById(`message-${messageId}`)
+				const scrollArea = document.getElementById("message-scroll-area")
+
+				if (targetElement && scrollArea) {
+					const observer = new IntersectionObserver(
+						(entries) => {
+							const entry = entries[0]
+							if (!entry.isIntersecting) {
+								// First try smooth scrolling
+								targetElement.scrollIntoView({
+									block: "center",
+									behavior: "auto"
+								})
+
+								// If we haven't maxed out attempts, try again after a delay
+								if (attempts < maxAttempts) {
+									attempts++
+									setTimeout(tryScroll, 100)
+								}
+							}
+							observer.disconnect()
+						},
+						{
+							root: scrollArea,
+							threshold: 0.5,
+							rootMargin: "20% 0px"
+						}
+					)
+
+					observer.observe(targetElement)
 				}
+			}
 
-				setTimeout(() => {
-					setHighlightedMessageId(null)
-				}, 1000)
+			// Initial delay to ensure render
+			const initialTimer = setTimeout(() => {
+				tryScroll()
 			}, 100)
+
+			// Remove highlight after delay
+			const highlightTimer = setTimeout(() => {
+				setHighlightedMessageId(null)
+			}, 2000)
+
+			return () => {
+				clearTimeout(initialTimer)
+				clearTimeout(highlightTimer)
+			}
 		}
 	}, [thread, messageId])
-
-	// Add this effect to scroll to bottom when messages change
-	useEffect(() => {
-		if (!thread?.messages?.length) {
-			return
-		}
-
-		const scrollArea = document.getElementById("message-scroll-area")
-		setTimeout(() => {
-			if (scrollArea) {
-				scrollArea.scrollTo({
-					top: scrollArea.scrollHeight,
-					behavior: "smooth"
-				})
-			}
-		}, 10)
-	}, [thread?.messages?.length])
 
 	const handleClose = () => {
 		router.back()
