@@ -109,13 +109,25 @@ export default function Thread() {
 				if (targetElement && scrollArea) {
 					const observer = new IntersectionObserver(
 						(entries) => {
+							if (entries.length === 0) {
+								return
+							}
 							const entry = entries[0]
+							if (!entry) {
+								return
+							}
+
 							if (!entry.isIntersecting) {
 								// First try smooth scrolling
 								targetElement.scrollIntoView({
-									block: "center",
+									block: "end",
 									behavior: "auto"
 								})
+
+								// Scroll a bit more to ensure the message is at the bottom
+								setTimeout(() => {
+									scrollArea.scrollTop = scrollArea.scrollHeight
+								}, 50)
 
 								// If we haven't maxed out attempts, try again after a delay
 								if (attempts < maxAttempts) {
