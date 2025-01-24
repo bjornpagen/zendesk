@@ -315,7 +315,7 @@ export function MessagesCommand({
 					{problems.map((problem) => (
 						<CommandItem
 							key={problem.id}
-							onSelect={() => toggleProblem(problem.title)}
+							onSelect={() => toggleProblem(problem.id)}
 						>
 							<Hash className="mr-2 h-4 w-4" />
 							<span className="capitalize">{problem.title}</span>
