@@ -51,8 +51,7 @@ export async function syncUser(): Promise<void> {
 				: user.username || "Anonymous",
 			avatar: user.imageUrl,
 			email: user.emailAddresses[0]?.emailAddress || "",
-			teamId: teamId,
-			role: "admin"
+			teamId: teamId
 		})
 
 		return
