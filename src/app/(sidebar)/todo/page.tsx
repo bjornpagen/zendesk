@@ -19,12 +19,6 @@ interface Todo {
 export default function TodoPage() {
 	const todos = [
 		{
-			title: "Real-time Notifications",
-			description:
-				"Implement Supabase webhook and SSE integration for real-time updates and notifications across the application",
-			priority: "high"
-		},
-		{
 			title: "Add Build Widget Script",
 			description:
 				"Implement functionality to generate and customize widget installation script",
