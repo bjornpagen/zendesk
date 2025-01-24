@@ -13,10 +13,10 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import useSWR from "swr"
 import {
 	getTeamMembers,
-	getAvailableUsers
+	getAvailableUsers,
+	createInvitation
 } from "@/server/actions/team-members"
 import { getTeam } from "@/server/actions/teams"
-import { createInvitation } from "@/server/actions/invitations"
 import { UserPlus } from "lucide-react"
 
 interface GroupActionProps {

@@ -3,6 +3,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { z } from "zod"
 import useSWR from "swr"
 import { getTeamMembers } from "@/server/actions/teams"
+import { useAuth } from "@clerk/nextjs"
 
 // Define schema for validating URL parameters
 const SearchParamsSchema = z.object({
@@ -13,6 +14,7 @@ const SearchParamsSchema = z.object({
 export function useTeamFilters() {
 	const router = useRouter()
 	const searchParams = useSearchParams()
+	const { userId } = useAuth()
 
 	// Parse and validate search params
 	const parsedParams = SearchParamsSchema.safeParse(
@@ -56,6 +58,11 @@ export function useTeamFilters() {
 		() => getTeamMembers(intextSearch)
 	)
 
+	// Get current user's role from the team members data
+	const currentUserRole =
+		filteredTeamMembers.find((member) => member.clerkId === userId)?.role ||
+		"member"
+
 	// Add keyboard shortcuts for command overlay (⌘J or Ctrl+J)
 	useEffect(() => {
 		const down = (e: KeyboardEvent) => {
@@ -93,6 +100,7 @@ export function useTeamFilters() {
 		isOpen,
 		intextSearch,
 		filteredTeamMembers,
+		currentUserRole,
 		handleOpenChange,
 		onFiltersChange,
 		updateSearchParams

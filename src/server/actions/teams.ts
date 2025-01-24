@@ -13,6 +13,7 @@ export type TeamMember = {
 	team: string
 	teamId: string
 	createdAt: Date
+	role: "admin" | "member"
 }
 
 export type Team = {
@@ -49,7 +50,8 @@ export async function getTeamMembers(searchQuery = ""): Promise<TeamMember[]> {
 			avatar: users.avatar,
 			team: teams.name,
 			teamId: teams.id,
-			createdAt: users.createdAt
+			createdAt: users.createdAt,
+			role: users.role
 		})
 		.from(users)
 		.innerJoin(teams, eq(teams.id, users.teamId))
@@ -57,21 +59,6 @@ export async function getTeamMembers(searchQuery = ""): Promise<TeamMember[]> {
 		.orderBy(users.name)
 
 	return members
-}
-
-/**
- * Change a user's team
- */
-export async function changeTeam(userId: string, teamId: string) {
-	const { userId: clerkId } = await auth()
-	if (!clerkId) {
-		throw new Error("Unauthorized")
-	}
-
-	await db
-		.update(schema.users)
-		.set({ teamId })
-		.where(eq(schema.users.clerkId, userId))
 }
 
 export async function getTeam(teamId: string): Promise<Team> {

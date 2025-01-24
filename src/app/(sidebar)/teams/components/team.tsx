@@ -8,17 +8,18 @@ import { formatDate } from "@/lib/format"
 import { useTeamFilters } from "@/hooks/use-team-filters"
 import { useMemo, useState, useCallback } from "react"
 import { TeamsSelectedFilters } from "./selected-filters"
-
 import { TeamsAction } from "./team-action"
 import { TeamsCommand } from "./command"
 import { mutate } from "swr"
 import { addTeamMember, removeTeamMember } from "@/server/actions/team-members"
+import type { TeamMember } from "@/server/actions/teams"
 
 export default function Teams() {
 	const {
 		isOpen,
 		intextSearch,
 		filteredTeamMembers,
+		currentUserRole,
 		handleOpenChange,
 		onFiltersChange,
 		updateSearchParams
@@ -29,25 +30,25 @@ export default function Teams() {
 	>(null)
 	const [selectedTeam, setSelectedTeam] = useState<string | null>(null)
 
+	const isAdmin = currentUserRole === "admin"
+
 	// Group members by team and store team IDs
 	const groupedMembers = useMemo(() => {
 		const groups: {
 			[key: string]: {
-				members: typeof filteredTeamMembers
+				members: TeamMember[]
 				teamId: string
 			}
 		} = {}
 
 		for (const member of filteredTeamMembers) {
 			if (!groups[member.team]) {
-				// First member of this team - initialize the group
 				groups[member.team] = {
 					members: [],
-					teamId: member.teamId // You'll need to add teamId to your TeamMember type
+					teamId: member.teamId
 				}
 			}
-			// biome-ignore lint/style/noNonNullAssertion: Property existence verified by preceding if-check
-			groups[member.team]!.members.push(member)
+			groups[member.team].members.push(member)
 		}
 
 		return groups
@@ -65,6 +66,11 @@ export default function Teams() {
 			teamId: string,
 			action: "add" | "remove" | "invite"
 		) => {
+			if (!isAdmin) {
+				console.error("Unauthorized: Admin role required")
+				return
+			}
+
 			try {
 				switch (action) {
 					case "add":
@@ -82,7 +88,7 @@ export default function Teams() {
 				console.error("Failed to update team member:", error)
 			}
 		},
-		[]
+		[isAdmin]
 	)
 
 	const handleClose = () => {
@@ -135,47 +141,49 @@ export default function Teams() {
 										{members.length === 1 ? "member" : "members"})
 									</span>
 								</div>
-								<div className="flex gap-2">
-									<Button
-										variant="outline"
-										size="sm"
-										onClick={() => {
-											setSelectedAction("invite")
-											setSelectedTeam(teamId)
-											handleOpenChange(true)
-										}}
-										title={`Invite new member to ${teamLabels[teamName]}`}
-									>
-										<Mail className="h-4 w-4 mr-2" />
-										Invite
-									</Button>
-									<Button
-										variant="outline"
-										size="sm"
-										onClick={() => {
-											setSelectedAction("add")
-											setSelectedTeam(teamId)
-											handleOpenChange(true)
-										}}
-										title={`Add member to ${teamLabels[teamName]}`}
-									>
-										<UserPlus className="h-4 w-4 mr-2" />
-										Add
-									</Button>
-									<Button
-										variant="outline"
-										size="sm"
-										onClick={() => {
-											setSelectedAction("remove")
-											setSelectedTeam(teamId)
-											handleOpenChange(true)
-										}}
-										title={`Remove member from ${teamLabels[teamName]}`}
-									>
-										<UserMinus className="h-4 w-4 mr-2" />
-										Remove
-									</Button>
-								</div>
+								{isAdmin && (
+									<div className="flex gap-2">
+										<Button
+											variant="outline"
+											size="sm"
+											onClick={() => {
+												setSelectedAction("invite")
+												setSelectedTeam(teamId)
+												handleOpenChange(true)
+											}}
+											title={`Invite new member to ${teamLabels[teamName]}`}
+										>
+											<Mail className="h-4 w-4 mr-2" />
+											Invite
+										</Button>
+										<Button
+											variant="outline"
+											size="sm"
+											onClick={() => {
+												setSelectedAction("add")
+												setSelectedTeam(teamId)
+												handleOpenChange(true)
+											}}
+											title={`Add member to ${teamLabels[teamName]}`}
+										>
+											<UserPlus className="h-4 w-4 mr-2" />
+											Add
+										</Button>
+										<Button
+											variant="outline"
+											size="sm"
+											onClick={() => {
+												setSelectedAction("remove")
+												setSelectedTeam(teamId)
+												handleOpenChange(true)
+											}}
+											title={`Remove member from ${teamLabels[teamName]}`}
+										>
+											<UserMinus className="h-4 w-4 mr-2" />
+											Remove
+										</Button>
+									</div>
+								)}
 							</div>
 
 							<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -202,6 +210,7 @@ export default function Teams() {
 													<p className="text-sm text-gray-500 truncate">
 														{member.email}
 													</p>
+													<p className="text-xs text-gray-400">{member.role}</p>
 												</div>
 											</div>
 											<div className="flex items-center justify-end">
@@ -233,7 +242,7 @@ export default function Teams() {
 				</div>
 			)}
 
-			{isOpen && selectedAction && selectedTeam && (
+			{isOpen && selectedAction && selectedTeam && isAdmin && (
 				<div
 					className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
 					onClick={handleClose}

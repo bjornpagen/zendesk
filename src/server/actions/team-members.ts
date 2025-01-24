@@ -4,6 +4,7 @@ import { db } from "@/server/db"
 import * as schema from "@/server/db/schema"
 import { auth } from "@clerk/nextjs/server"
 import { and, eq, ilike, not, or, type SQL } from "drizzle-orm"
+import { clerk } from "@/server/clerk"
 
 export type TeamMember = {
 	clerkId: string
@@ -11,6 +12,50 @@ export type TeamMember = {
 	email: string
 	avatar: string
 	createdAt: Date
+}
+
+async function checkAdminRole(clerkId: string) {
+	const user = await db
+		.select({ role: schema.users.role })
+		.from(schema.users)
+		.where(eq(schema.users.clerkId, clerkId))
+		.then((rows) => rows[0])
+
+	if (!user || user.role !== "admin") {
+		throw new Error("Unauthorized: Admin role required")
+	}
+}
+
+export async function createInvitation(email: string, teamId: string) {
+	const { userId: clerkId } = await auth()
+	if (!clerkId) {
+		throw new Error("Unauthorized")
+	}
+
+	await checkAdminRole(clerkId)
+
+	// Validate email and teamId
+	if (!email || !email.includes("@")) {
+		throw new Error("Invalid email address")
+	}
+	if (!teamId) {
+		throw new Error("Team ID is required")
+	}
+
+	const invitation = await clerk.invitations.createInvitation({
+		emailAddress: email.trim(),
+		redirectUrl: "https://zendesk-sable.vercel.app/sign-in",
+		publicMetadata: {
+			invitedBy: clerkId,
+			teamId: teamId
+		}
+	})
+	// Return only the necessary serializable data
+	return {
+		id: invitation.id,
+		emailAddress: invitation.emailAddress,
+		status: invitation.status
+	}
 }
 
 /**
@@ -24,6 +69,8 @@ export async function getTeamMembers(
 	if (!clerkId) {
 		throw new Error("Unauthorized")
 	}
+
+	await checkAdminRole(clerkId)
 
 	const conditions: SQL[] = [eq(schema.users.teamId, teamId)]
 
@@ -65,6 +112,8 @@ export async function getAvailableUsers(
 		throw new Error("Unauthorized")
 	}
 
+	await checkAdminRole(clerkId)
+
 	const conditions: SQL[] = [not(eq(schema.users.teamId, teamId))]
 
 	if (searchQuery) {
@@ -102,6 +151,8 @@ export async function addTeamMember(userId: string, teamId: string) {
 		throw new Error("Unauthorized")
 	}
 
+	await checkAdminRole(clerkId)
+
 	// Make sure the team actually exists (foreign key constraint requirement)
 	const existingTeam = await db
 		.select({ id: schema.teams.id })
@@ -127,6 +178,8 @@ export async function removeTeamMember(userId: string, currentTeamId: string) {
 	if (!clerkId) {
 		throw new Error("Unauthorized")
 	}
+
+	await checkAdminRole(clerkId)
 
 	const defaultTeam = await db
 		.select({ id: schema.teams.id })
