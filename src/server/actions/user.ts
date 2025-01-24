@@ -24,3 +24,22 @@ export async function updateUserName(name: string): Promise<void> {
 		.set({ name })
 		.where(eq(schema.users.clerkId, user.id))
 }
+
+export async function getUserName(): Promise<string> {
+	const user = await currentUser()
+	if (!user) {
+		throw new Error("Unauthorized")
+	}
+
+	const dbUser = await db
+		.select({ name: schema.users.name })
+		.from(schema.users)
+		.where(eq(schema.users.clerkId, user.id))
+		.then(([user]) => user)
+
+	if (!dbUser) {
+		throw new Error("User not found")
+	}
+
+	return dbUser.name
+}

@@ -13,8 +13,9 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { updateUserName } from "@/server/actions/user"
+import { getUserName, updateUserName } from "@/server/actions/user"
 import { cn } from "@/lib/utils"
+import useSWR from "swr"
 
 interface UserNameDisplayProps {
 	className?: string
@@ -24,6 +25,8 @@ export function UserNameDisplay({ className }: UserNameDisplayProps) {
 	const { user } = useUser()
 	const [isEditing, setIsEditing] = useState(false)
 	const [name, setName] = useState("")
+
+	const { data: dbName } = useSWR("userName", getUserName)
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
@@ -44,7 +47,7 @@ export function UserNameDisplay({ className }: UserNameDisplayProps) {
 			<button
 				type="button"
 				onClick={() => {
-					setName(user.fullName || "")
+					setName(dbName || "")
 					setIsEditing(true)
 				}}
 				className={cn(
@@ -52,7 +55,7 @@ export function UserNameDisplay({ className }: UserNameDisplayProps) {
 					className
 				)}
 			>
-				{user.fullName}
+				{dbName || "Loading..."}
 			</button>
 
 			<Dialog open={isEditing} onOpenChange={setIsEditing}>
