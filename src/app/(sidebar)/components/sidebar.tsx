@@ -8,8 +8,12 @@ import {
 	SidebarGroupLabel,
 	SidebarMenu,
 	SidebarMenuButton,
-	SidebarMenuItem
+	SidebarMenuItem,
+	SidebarFooter
 } from "@/components/ui/sidebar"
+import { UserButton } from "@clerk/nextjs"
+import { Card } from "@/components/ui/card"
+import { UserNameDisplay } from "./user-name-display"
 
 // Menu items.
 const items = [
@@ -35,7 +39,7 @@ const items = [
 	}
 ]
 
-export function Sidebar() {
+export default function Sidebar() {
 	return (
 		<ShadcnSidebar>
 			<SidebarContent>
@@ -47,7 +51,7 @@ export function Sidebar() {
 								<SidebarMenuItem key={item.title}>
 									<SidebarMenuButton asChild>
 										<Link href={item.url}>
-											<item.icon />
+											<item.icon className="h-4 w-4" />
 											<span>{item.title}</span>
 										</Link>
 									</SidebarMenuButton>
@@ -57,6 +61,12 @@ export function Sidebar() {
 					</SidebarGroupContent>
 				</SidebarGroup>
 			</SidebarContent>
+			<SidebarFooter>
+				<Card className="p-4 flex items-center justify-between">
+					<UserNameDisplay className="flex-1 mr-2" />
+					<UserButton afterSignOutUrl="/" />
+				</Card>
+			</SidebarFooter>
 		</ShadcnSidebar>
 	)
 }
