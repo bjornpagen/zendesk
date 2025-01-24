@@ -37,6 +37,12 @@ export default function TodoPage() {
 			priority: "medium"
 		},
 		{
+			title: "Message Property Change Tracking",
+			description:
+				"Add schema support for tracking message property changes like status (open/closed/spam) and category changes",
+			priority: "medium"
+		},
+		{
 			title: "Support Organizations",
 			description:
 				"Add support for organizations to the app, allowing users to manage multiple teams within a single account",
