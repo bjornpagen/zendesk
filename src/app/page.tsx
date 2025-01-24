@@ -1,6 +1,4 @@
 "use client"
-
-import { useEffect } from "react"
 import { motion, useScroll, useTransform } from "framer-motion"
 import {
 	Mail,
@@ -58,11 +56,6 @@ export default function LandingPage() {
 	const { scrollYProgress } = useScroll()
 	const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
 	const scale = useTransform(scrollYProgress, [0, 0.5], [1, 0.8])
-
-	// Force dark mode on mount
-	useEffect(() => {
-		document.documentElement.classList.add("dark")
-	}, [])
 
 	const containerVariants = {
 		hidden: { opacity: 0 },
