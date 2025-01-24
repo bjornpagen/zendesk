@@ -12,6 +12,8 @@ import {
 	MessageCircleOff
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import useSWR from "swr"
+import { getProblems, type Problem } from "@/server/actions/problems"
 
 interface SelectedFiltersProps {
 	statuses: string[]
@@ -70,6 +72,13 @@ export function MessagesSelectedFilters({
 	intext,
 	onFilterRemove
 }: SelectedFiltersProps) {
+	const { data: problemsList = [] } = useSWR<Problem[]>("problems", getProblems)
+
+	// Create a map of problem IDs to their titles
+	const problemTitles = Object.fromEntries(
+		problemsList.map((p) => [p.id, p.title])
+	)
+
 	if (
 		statuses.length === 0 &&
 		problems.length === 0 &&
@@ -127,19 +136,16 @@ export function MessagesSelectedFilters({
 					<span className="capitalize">{priority}</span>
 				</Badge>
 			))}
-			{problems.map((problem) => (
+			{problems.map((problemId) => (
 				<Badge
-					key={problem}
+					key={problemId}
 					variant="secondary"
 					className="flex items-center cursor-pointer"
-					onClick={() => onFilterRemove("problem", problem)}
+					onClick={() => onFilterRemove("problem", problemId)}
 				>
 					<Hash className="h-4 w-4 mr-2" />
-					<span>
-						{problem
-							.split("-")
-							.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-							.join(" ")}
+					<span className="capitalize">
+						{problemTitles[problemId] || problemId}
 					</span>
 				</Badge>
 			))}
