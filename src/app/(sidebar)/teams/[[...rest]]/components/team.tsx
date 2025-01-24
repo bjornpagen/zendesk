@@ -14,6 +14,7 @@ import { TeamsCommand } from "./command"
 import { mutate } from "swr"
 import { addTeamMember, removeTeamMember } from "@/server/actions/team-members"
 import type { TeamMember } from "@/server/actions/teams"
+import Link from "next/link"
 
 export default function Teams() {
 	const {
@@ -190,47 +191,50 @@ export default function Teams() {
 
 							<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
 								{members.map((member) => (
-									<Card
+									<Link
 										key={member.clerkId}
-										className="cursor-pointer hover:shadow-md transition-shadow"
+										href={`/teams/user/${member.clerkId}`}
+										className="block"
 									>
-										<CardContent className="flex flex-col p-4 space-y-4">
-											<div className="flex items-start gap-4">
-												<Avatar>
-													<AvatarImage src={member.avatar} />
-													<AvatarFallback>
-														{member.name
-															.split(" ")
-															.map((n) => n[0])
-															.join("")}
-													</AvatarFallback>
-												</Avatar>
-												<div className="flex-1 min-w-0">
-													<h3 className="text-sm font-medium text-gray-900 truncate">
-														{member.name}
-													</h3>
-													<p className="text-sm text-gray-500 truncate">
-														{member.email}
+										<Card className="cursor-pointer hover:shadow-md transition-shadow">
+											<CardContent className="flex flex-col p-4 space-y-4">
+												<div className="flex items-start gap-4">
+													<Avatar>
+														<AvatarImage src={member.avatar} />
+														<AvatarFallback>
+															{member.name
+																.split(" ")
+																.map((n) => n[0])
+																.join("")}
+														</AvatarFallback>
+													</Avatar>
+													<div className="flex-1 min-w-0">
+														<h3 className="text-sm font-medium text-gray-900 truncate hover:text-blue-600">
+															{member.name}
+														</h3>
+														<p className="text-sm text-gray-500 truncate">
+															{member.email}
+														</p>
+													</div>
+												</div>
+												<div className="flex items-center justify-between">
+													{member.role === "admin" ? (
+														<Badge
+															variant="default"
+															className="bg-purple-500 hover:bg-purple-600"
+														>
+															Admin
+														</Badge>
+													) : (
+														<Badge variant="secondary">Member</Badge>
+													)}
+													<p className="text-xs text-gray-400">
+														Joined {formatDate(member.createdAt)}
 													</p>
 												</div>
-											</div>
-											<div className="flex items-center justify-between">
-												{member.role === "admin" ? (
-													<Badge
-														variant="default"
-														className="bg-purple-500 hover:bg-purple-600"
-													>
-														Admin
-													</Badge>
-												) : (
-													<Badge variant="secondary">Member</Badge>
-												)}
-												<p className="text-xs text-gray-400">
-													Joined {formatDate(member.createdAt)}
-												</p>
-											</div>
-										</CardContent>
-									</Card>
+											</CardContent>
+										</Card>
+									</Link>
 								))}
 							</div>
 						</div>
