@@ -408,7 +408,7 @@ export default function Thread() {
 								className="capitalize cursor-pointer"
 								onClick={() => handleChangeProperty("problem")}
 							>
-								{thread.problem?.title || "No Problem"}
+								{thread.problem?.title || "No Category"}
 							</Badge>
 						</div>
 					</div>

@@ -120,7 +120,9 @@ export function ChangeThreadPropertyDialog({
 		<Dialog open={isOpen} onOpenChange={onClose}>
 			<DialogContent className="sm:max-w-[425px]">
 				<DialogHeader>
-					<DialogTitle>Change {propertyType}</DialogTitle>
+					<DialogTitle>
+						Change {propertyType === "problem" ? "category" : propertyType}
+					</DialogTitle>
 				</DialogHeader>
 				<Command className="rounded-lg border shadow-md">
 					<CommandInput

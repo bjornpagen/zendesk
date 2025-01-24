@@ -311,7 +311,7 @@ export function MessagesCommand({
 					</CommandItem>
 				</CommandGroup>
 				<CommandSeparator />
-				<CommandGroup heading="Filter Problems" className="p-2">
+				<CommandGroup heading="Filter Categories" className="p-2">
 					{problems.map((problem) => (
 						<CommandItem
 							key={problem.id}
