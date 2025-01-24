@@ -50,6 +50,8 @@ export type UserDetails = {
 	name: string
 	email: string
 	role: "admin" | "member"
+	avatar: string
+	createdAt: Date
 	closedTicketsTotal: number
 	closedTicketsToday: number
 	averageCloseTime: number // in minutes
@@ -62,7 +64,9 @@ export async function getUserDetails(userId: string): Promise<UserDetails> {
 			clerkId: schema.users.clerkId,
 			name: schema.users.name,
 			email: schema.users.email,
-			role: schema.users.role
+			role: schema.users.role,
+			avatar: schema.users.avatar,
+			createdAt: schema.users.createdAt
 		})
 		.from(schema.users)
 		.where(eq(schema.users.clerkId, userId))
@@ -123,6 +127,8 @@ export async function getUserDetails(userId: string): Promise<UserDetails> {
 		name: user.name,
 		email: user.email,
 		role: user.role as "admin" | "member",
+		avatar: user.avatar,
+		createdAt: user.createdAt,
 		closedTicketsTotal: total,
 		closedTicketsToday: today,
 		averageCloseTime: Math.round(avgTime)
