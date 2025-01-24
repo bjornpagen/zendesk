@@ -52,6 +52,12 @@ import {
 } from "react-icons/si"
 import { SignedIn, SignedOut } from "@clerk/nextjs"
 
+// Add these constants outside the component
+const LIGHT_BG_IMAGE =
+	"https://images.unsplash.com/photo-1512998844734-cd2cca565822"
+const DARK_BG_IMAGE =
+	"https://images.unsplash.com/photo-1567360425618-1594206637d2"
+
 export default function LandingPage() {
 	const [theme, setTheme] = useState<"light" | "dark">("dark")
 	const { scrollYProgress } = useScroll()
@@ -179,25 +185,26 @@ export default function LandingPage() {
 						className="absolute inset-0 z-0"
 					>
 						<div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 opacity-20 mix-blend-multiply" />
-						{theme === "light" ? (
-							<Image
-								src="https://images.unsplash.com/photo-1512998844734-cd2cca565822"
-								alt="Abstract gradient background - Light mode"
-								className="w-full h-full object-cover"
-								fill
-								priority
-								sizes="100vw"
-							/>
-						) : (
-							<Image
-								src="https://images.unsplash.com/photo-1567360425618-1594206637d2"
-								alt="Abstract gradient background - Dark mode"
-								className="w-full h-full object-cover brightness-50"
-								fill
-								priority
-								sizes="100vw"
-							/>
-						)}
+						<Image
+							src={LIGHT_BG_IMAGE}
+							alt="Abstract gradient background - Light mode"
+							className={`w-full h-full object-cover transition-opacity duration-300 ${
+								theme === "light" ? "opacity-100" : "opacity-0"
+							}`}
+							fill
+							priority
+							sizes="100vw"
+						/>
+						<Image
+							src={DARK_BG_IMAGE}
+							alt="Abstract gradient background - Dark mode"
+							className={`w-full h-full object-cover brightness-50 transition-opacity duration-300 ${
+								theme === "dark" ? "opacity-100" : "opacity-0"
+							}`}
+							fill
+							priority
+							sizes="100vw"
+						/>
 					</motion.div>
 				</motion.section>
 
