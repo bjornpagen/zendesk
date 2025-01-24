@@ -1,10 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect } from "react"
 import { motion, useScroll, useTransform } from "framer-motion"
 import {
-	Moon,
-	Sun,
 	Mail,
 	MessageSquare,
 	Users,
@@ -52,32 +50,19 @@ import {
 } from "react-icons/si"
 import { SignedIn, SignedOut } from "@clerk/nextjs"
 
-// Add these constants outside the component
-const LIGHT_BG_IMAGE =
-	"https://images.unsplash.com/photo-1512998844734-cd2cca565822"
+// Remove these constants if not needed for dark mode only
 const DARK_BG_IMAGE =
 	"https://images.unsplash.com/photo-1567360425618-1594206637d2"
 
 export default function LandingPage() {
-	const [theme, setTheme] = useState<"light" | "dark">("dark")
 	const { scrollYProgress } = useScroll()
 	const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
 	const scale = useTransform(scrollYProgress, [0, 0.5], [1, 0.8])
 
-	const toggleTheme = () => {
-		setTheme(theme === "light" ? "dark" : "light")
-		document.documentElement.classList.toggle("dark")
-	}
-
+	// Force dark mode on mount
 	useEffect(() => {
-		const savedTheme = localStorage.getItem("theme") || "dark"
-		setTheme(savedTheme as "light" | "dark")
-		document.documentElement.classList.toggle("dark", savedTheme === "dark")
+		document.documentElement.classList.add("dark")
 	}, [])
-
-	useEffect(() => {
-		localStorage.setItem("theme", theme)
-	}, [theme])
 
 	const containerVariants = {
 		hidden: { opacity: 0 },
@@ -98,9 +83,7 @@ export default function LandingPage() {
 	}
 
 	return (
-		<div
-			className={`min-h-screen bg-background text-foreground ${theme === "dark" ? "dark" : ""}`}
-		>
+		<div className="min-h-screen bg-background text-foreground dark">
 			<motion.header
 				initial={{ y: -50, opacity: 0 }}
 				animate={{ y: 0, opacity: 1 }}
@@ -116,13 +99,6 @@ export default function LandingPage() {
 						<Button variant="ghost">Contact</Button>
 					</nav>
 					<div className="flex items-center space-x-4">
-						<Button variant="outline" size="icon" onClick={toggleTheme}>
-							{theme === "light" ? (
-								<Moon className="h-[1.2rem] w-[1.2rem]" />
-							) : (
-								<Sun className="h-[1.2rem] w-[1.2rem]" />
-							)}
-						</Button>
 						<SignedIn>
 							<Button variant="outline" asChild>
 								<a href="/messages?status=open&needsResponse=true">Dashboard</a>
@@ -186,21 +162,9 @@ export default function LandingPage() {
 					>
 						<div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 opacity-20 mix-blend-multiply" />
 						<Image
-							src={LIGHT_BG_IMAGE}
-							alt="Abstract gradient background - Light mode"
-							className={`w-full h-full object-cover transition-opacity duration-300 ${
-								theme === "light" ? "opacity-100" : "opacity-0"
-							}`}
-							fill
-							priority
-							sizes="100vw"
-						/>
-						<Image
 							src={DARK_BG_IMAGE}
-							alt="Abstract gradient background - Dark mode"
-							className={`w-full h-full object-cover brightness-50 transition-opacity duration-300 ${
-								theme === "dark" ? "opacity-100" : "opacity-0"
-							}`}
+							alt="Abstract gradient background"
+							className="w-full h-full object-cover brightness-50"
 							fill
 							priority
 							sizes="100vw"
