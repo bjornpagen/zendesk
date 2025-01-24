@@ -48,7 +48,8 @@ export default function Teams() {
 					teamId: member.teamId
 				}
 			}
-			groups[member.team].members.push(member)
+			// biome-ignore lint/style/noNonNullAssertion: Property existence verified by preceding if-check
+			groups[member.team]!.members.push(member)
 		}
 
 		return groups
