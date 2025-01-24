@@ -35,6 +35,7 @@ import {
 	deleteMetadataField
 } from "@/server/actions/metadata"
 import { getCustomerMetadata } from "@/server/actions/metadata"
+import { useMessageSubscription } from "@/hooks/use-message-subscription"
 
 import Image from "next/image"
 
@@ -89,6 +90,21 @@ export default function Thread() {
 		params.id ? ["thread", params.id] : null,
 		() => getThread(params.id as string)
 	)
+
+	// Add Supabase subscription
+	useMessageSubscription(params.id as string, async (messageId) => {
+		await mutate()
+		// Scroll to bottom after mutation is complete
+		const scrollArea = document.getElementById("message-scroll-area")
+		if (scrollArea) {
+			setTimeout(() => {
+				scrollArea.scrollTo({
+					top: scrollArea.scrollHeight,
+					behavior: "smooth"
+				})
+			}, 100)
+		}
+	})
 
 	const { data: customerMetadata, mutate: mutateMetadata } = useSWR(
 		thread?.customer?.id ? ["customerMetadata", thread.customer.id] : null,
