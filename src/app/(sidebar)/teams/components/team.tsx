@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Search, UserPlus, UserMinus, Mail } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
 import { formatDate } from "@/lib/format"
 import { useTeamFilters } from "@/hooks/use-team-filters"
 import { useMemo, useState, useCallback } from "react"
@@ -193,7 +194,7 @@ export default function Teams() {
 										key={member.clerkId}
 										className="cursor-pointer hover:shadow-md transition-shadow"
 									>
-										<CardContent className="flex flex-col p-4 space-y-3">
+										<CardContent className="flex flex-col p-4 space-y-4">
 											<div className="flex items-start gap-4">
 												<Avatar>
 													<AvatarImage src={member.avatar} />
@@ -211,10 +212,19 @@ export default function Teams() {
 													<p className="text-sm text-gray-500 truncate">
 														{member.email}
 													</p>
-													<p className="text-xs text-gray-400">{member.role}</p>
 												</div>
 											</div>
-											<div className="flex items-center justify-end">
+											<div className="flex items-center justify-between">
+												{member.role === "admin" ? (
+													<Badge
+														variant="default"
+														className="bg-purple-500 hover:bg-purple-600"
+													>
+														Admin
+													</Badge>
+												) : (
+													<Badge variant="secondary">Member</Badge>
+												)}
 												<p className="text-xs text-gray-400">
 													Joined {formatDate(member.createdAt)}
 												</p>
