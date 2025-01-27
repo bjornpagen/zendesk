@@ -4,6 +4,7 @@ import { db } from "@/server/db"
 import * as schema from "@/server/db/schema"
 import { uploadToS3 } from "@/server/s3"
 import { autoTagProblemForThread } from "@/server/actions/problemClassifier"
+import { eq } from "drizzle-orm"
 
 export async function POST(request: NextRequest) {
 	try {
@@ -103,6 +104,7 @@ export async function POST(request: NextRequest) {
 
 				// Create new thread if no threadId found in email
 				let threadId: string | undefined
+				let problemId: string | undefined
 				if (!existingThreadId) {
 					const thread = await tx
 						.insert(schema.threads)
@@ -113,7 +115,8 @@ export async function POST(request: NextRequest) {
 							priority: "non-urgent"
 						})
 						.returning({
-							id: schema.threads.id
+							id: schema.threads.id,
+							problemId: schema.threads.problemId
 						})
 						.then(([thread]) => thread)
 
@@ -121,8 +124,21 @@ export async function POST(request: NextRequest) {
 						throw new Error("Failed to create thread")
 					}
 					threadId = thread.id
+					problemId = thread.problemId ?? undefined
 				} else {
-					threadId = existingThreadId
+					// Fetch existing thread to get its problemId
+					const thread = await tx.query.threads.findFirst({
+						where: eq(schema.threads.id, existingThreadId),
+						columns: {
+							id: true,
+							problemId: true
+						}
+					})
+					if (!thread) {
+						throw new Error("Thread not found")
+					}
+					threadId = thread.id
+					problemId = thread.problemId ?? undefined
 				}
 
 				// Create message (removed inReplyTo)
@@ -145,11 +161,13 @@ export async function POST(request: NextRequest) {
 					throw new Error("Failed to create message")
 				}
 
-				return { customer, threadId, message }
+				return { customer, threadId, problemId, message }
 			})
 
-			// After the transaction completes, classify the problem
-			autoTagProblemForThread(result.threadId)
+			// After the transaction completes, classify the problem only if needed
+			if (!result.problemId) {
+				await autoTagProblemForThread(result.threadId)
+			}
 
 			console.log("🎉 Successfully processed email:", {
 				customerId: result.customer.id,
@@ -194,6 +212,7 @@ export async function POST(request: NextRequest) {
 
 			// Create new thread if no threadId found in email
 			let threadId: string | undefined
+			let problemId: string | undefined
 			if (!existingThreadId) {
 				const thread = await tx
 					.insert(schema.threads)
@@ -204,7 +223,8 @@ export async function POST(request: NextRequest) {
 						priority: "non-urgent"
 					})
 					.returning({
-						id: schema.threads.id
+						id: schema.threads.id,
+						problemId: schema.threads.problemId
 					})
 					.then(([thread]) => thread)
 
@@ -212,8 +232,21 @@ export async function POST(request: NextRequest) {
 					throw new Error("Failed to create thread")
 				}
 				threadId = thread.id
+				problemId = thread.problemId ?? undefined
 			} else {
-				threadId = existingThreadId
+				// Fetch existing thread to get its problemId
+				const thread = await tx.query.threads.findFirst({
+					where: eq(schema.threads.id, existingThreadId),
+					columns: {
+						id: true,
+						problemId: true
+					}
+				})
+				if (!thread) {
+					throw new Error("Thread not found")
+				}
+				threadId = thread.id
+				problemId = thread.problemId ?? undefined
 			}
 
 			// Create message (removed inReplyTo)
@@ -235,11 +268,13 @@ export async function POST(request: NextRequest) {
 				throw new Error("Failed to create message")
 			}
 
-			return { customer, threadId, message }
+			return { customer, threadId, problemId, message }
 		})
 
-		// After the transaction completes, classify the problem
-		await autoTagProblemForThread(result.threadId)
+		// After the transaction completes, classify the problem only if needed
+		if (!result.problemId) {
+			await autoTagProblemForThread(result.threadId)
+		}
 
 		console.log("🎉 Successfully processed email:", {
 			customerId: result.customer.id,

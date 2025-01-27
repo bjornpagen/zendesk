@@ -49,7 +49,8 @@ export async function getWidgetThread(threadId: string) {
 			id: true,
 			subject: true,
 			createdAt: true,
-			updatedAt: true
+			updatedAt: true,
+			problemId: true
 		}
 	})
 
@@ -92,8 +93,10 @@ export async function sendWidgetMessage(content: string, threadId: string) {
 		.set({ lastReadAt: new Date() })
 		.where(eq(schema.threads.id, thread.id))
 
-	// Classify the problem
-	autoTagProblemForThread(thread.id)
+	// Only classify if the thread doesn't have a problem assigned
+	if (!thread.problemId) {
+		await autoTagProblemForThread(thread.id)
+	}
 
 	return newMessage
 }
