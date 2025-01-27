@@ -1,4 +1,4 @@
-import { MessageSquare, ListTodo, Users, BarChart } from "lucide-react"
+import { MessageSquare, ListTodo, Users, BarChart, Hash } from "lucide-react"
 import Link from "next/link"
 import {
 	Sidebar as ShadcnSidebar,
@@ -26,6 +26,11 @@ const items = [
 		title: "Teams",
 		url: "/teams",
 		icon: Users
+	},
+	{
+		title: "Categories",
+		url: "/categories",
+		icon: Hash
 	},
 	{
 		title: "Todo",
