@@ -19,6 +19,16 @@ interface Todo {
 export default function TodoPage() {
 	const todos = [
 		{
+			title: "Track AI Agent Metrics",
+			description: `Implement comprehensive AI metrics tracking system:
+- Success rate tracking for action identification (expect >95%)
+- Field update accuracy monitoring (target >98%)
+- Response latency measurements (<2s avg)
+- Error classification and rate tracking (<1% critical)
+Requires integration with LangSmith/LangFuse for visualization.`,
+			priority: "high"
+		},
+		{
 			title: "Add Build Widget Script",
 			description:
 				"Implement functionality to generate and customize widget installation script",
