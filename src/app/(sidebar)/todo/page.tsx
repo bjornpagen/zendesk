@@ -19,55 +19,57 @@ interface Todo {
 export default function TodoPage() {
 	const todos = [
 		{
-			title: "Track AI Agent Metrics",
-			description: `Implement comprehensive AI metrics tracking system:
-- Success rate tracking for action identification (expect >95%)
-- Field update accuracy monitoring (target >98%)
-- Response latency measurements (<2s avg)
-- Error classification and rate tracking (<1% critical)
-Requires integration with LangSmith/LangFuse for visualization.`,
+			title: "Assignment System: AI",
+			description:
+				"Build intelligent auto-assignment system for tickets using AI. Features include: load balancing based on agent capacity, skill-based routing, round-robin distribution, handling of vacation/away status, and learning from past assignment success rates. System should optimize for even workload distribution while maintaining high customer satisfaction.",
 			priority: "high"
+		},
+		{
+			title: "AI Response Agent",
+			description:
+				"Implement AI agent for automated ticket response and escalation. System should handle initial response generation, intent classification, common issue resolution, and smart escalation to human agents. Include multi-language support, quality assurance checks, and safety guardrails. Must integrate with existing knowledge base and maintain detailed interaction logs.",
+			priority: "high"
+		},
+		{
+			title: "Track AI Agent Metrics",
+			description:
+				"Implement comprehensive AI metrics tracking system for monitoring success rates, accuracy, latency, and error rates. Track agent interventions, customer satisfaction correlation, and model drift. Integrate with LangSmith/LangFuse for visualization and alerting. Target >95% success rate for actions and <2s average response time.",
+			priority: "high"
+		},
+		{
+			title: "Parse Inbound Emails: AI",
+			description:
+				"Implement advanced email parsing system using AI to handle complex email threads. Features: clean formatting of top-posted replies, signature removal, attachment handling, quoted text identification, and key information extraction. Should support multiple email formats and languages while maintaining conversation context.",
+			priority: "medium"
 		},
 		{
 			title: "Add Build Widget Script",
 			description:
-				"Implement functionality to generate and customize widget installation script",
+				"Implement functionality to generate and customize widget installation script. Include options for theme customization, initial message configuration, custom fields, language localization, and mobile responsiveness. Provide live preview and validation of configuration options.",
 			priority: "medium"
 		},
 		{
 			title: "Support Multiple File Attachments",
 			description:
-				"Update messages schema and UI to allow multiple file attachments per message",
+				"Update messages schema and UI to allow multiple file attachments per message. Implement drag-and-drop upload, preview capabilities, automatic image compression, virus scanning, and progress indicators. Add support for max file size limits and bulk download options.",
 			priority: "medium"
 		},
 		{
 			title: "Message Property Change Tracking",
 			description:
-				"Add schema support for tracking message property changes like status (open/closed/spam) and category changes",
+				"Add comprehensive schema support for tracking message property changes. Track modifications to status, categories, priority levels, assignments, and custom fields. Implement audit log UI showing change history with timestamps and user attribution.",
 			priority: "medium"
 		},
 		{
 			title: "Support Organizations",
 			description:
-				"Add support for organizations to the app, allowing users to manage multiple teams within a single account",
+				"Add multi-organization support to enable enterprise features. Include organization-level settings, team management, role-based access control, custom branding, SSO integration options, and billing management. Implement data isolation between organizations while allowing controlled sharing.",
 			priority: "low"
 		},
 		{
 			title: "Analytics Dashboard",
 			description:
-				"Add simple metrics page showing response times and ticket statistics",
-			priority: "low"
-		},
-		{
-			title: "Parse Inbound Emails: AI",
-			description:
-				"Implement email parsing system to clean and format top-posted email replies for better readability in threads",
-			priority: "low"
-		},
-		{
-			title: "Assignment System: AI",
-			description:
-				"Build auto-assignment logic with load balancing and rotation features",
+				"Create comprehensive analytics dashboard showing key performance metrics including response times, ticket volume trends, resolution rates, customer satisfaction scores, agent performance metrics, and AI system effectiveness. Include data export and automated reporting features.",
 			priority: "low"
 		}
 	] as Todo[]
