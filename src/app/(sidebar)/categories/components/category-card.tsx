@@ -3,9 +3,12 @@
 import { useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Edit2, Trash2 } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Edit2, Trash2, Users } from "lucide-react"
 import { type Category, deleteCategory } from "@/server/actions/categories"
 import { CategoryDialog } from "./category-dialog"
+import { getTeam } from "@/server/actions/teams"
+import useSWR from "swr"
 
 interface CategoryCardProps {
 	category: Category
@@ -19,6 +22,12 @@ export function CategoryCard({
 	onDelete
 }: CategoryCardProps) {
 	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+
+	// Fetch team info if category has a team assigned
+	const { data: team } = useSWR(
+		category.teamId ? `team-${category.teamId}` : null,
+		() => (category.teamId ? getTeam(category.teamId) : null)
+	)
 
 	const handleDelete = async () => {
 		try {
@@ -38,6 +47,12 @@ export function CategoryCard({
 					<p className="text-sm text-muted-foreground mt-1">
 						{category.description}
 					</p>
+					{team && (
+						<Badge variant="secondary" className="mt-2">
+							<Users className="h-3 w-3 mr-1" />
+							{team.name}
+						</Badge>
+					)}
 				</div>
 				<div className="flex gap-2">
 					<Button

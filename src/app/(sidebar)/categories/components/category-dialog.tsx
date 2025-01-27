@@ -11,10 +11,19 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue
+} from "@/components/ui/select"
+import {
 	type Category,
 	createCategory,
 	updateCategory
 } from "@/server/actions/categories"
+import { getTeamMembers } from "@/server/actions/teams"
+import useSWR from "swr"
 
 interface CategoryDialogProps {
 	open: boolean
@@ -31,14 +40,23 @@ export function CategoryDialog({
 }: CategoryDialogProps) {
 	const [title, setTitle] = useState(category?.title ?? "")
 	const [description, setDescription] = useState(category?.description ?? "")
+	const [teamId, setTeamId] = useState(category?.teamId ?? null)
 	const [isSubmitting, setIsSubmitting] = useState(false)
+
+	// Fetch teams for the dropdown
+	const { data: teamMembers = [] } = useSWR("team-members", getTeamMembers)
+	const teams = Array.from(
+		new Map(
+			teamMembers.map((m) => [m.teamId, { id: m.teamId, name: m.team }])
+		).values()
+	)
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
 		setIsSubmitting(true)
 
 		try {
-			const data = { title, description }
+			const data = { title, description, teamId }
 			const result = category
 				? await updateCategory(category.id, data)
 				: await createCategory(data)
@@ -80,6 +98,25 @@ export function CategoryDialog({
 							onChange={(e) => setDescription(e.target.value)}
 							required
 						/>
+					</div>
+
+					<div className="space-y-2">
+						<Select
+							value={teamId ?? undefined}
+							onValueChange={(value) => setTeamId(value || null)}
+						>
+							<SelectTrigger>
+								<SelectValue placeholder="Select Team (Optional)" />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="">No Team</SelectItem>
+								{teams.map((team) => (
+									<SelectItem key={team.id} value={team.id}>
+										{team.name}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
 					</div>
 
 					<div className="flex justify-end">

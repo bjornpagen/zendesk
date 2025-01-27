@@ -8,13 +8,15 @@ import { z } from "zod"
 
 const CategorySchema = z.object({
 	title: z.string().min(1),
-	description: z.string().min(1)
+	description: z.string().min(1),
+	teamId: z.string().nullable()
 })
 
 export type Category = {
 	id: string
 	title: string
 	description: string
+	teamId: string | null
 	createdAt: Date
 	updatedAt: Date
 }
@@ -77,6 +79,26 @@ export async function updateCategory(
 
 	if (!category) {
 		throw new Error("Failed to update category")
+	}
+
+	return category
+}
+
+export async function updateCategoryTeam(id: string, teamId: string | null) {
+	const { userId: clerkId } = await auth()
+	if (!clerkId) {
+		throw new Error("Unauthorized")
+	}
+
+	const category = await db
+		.update(schema.problems)
+		.set({ teamId })
+		.where(eq(schema.problems.id, id))
+		.returning()
+		.then(([c]) => c)
+
+	if (!category) {
+		throw new Error("Failed to update category team")
 	}
 
 	return category
