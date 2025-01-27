@@ -14,6 +14,8 @@ import { zodResponseFormat } from "openai/helpers/zod"
 export async function autoTagProblemForThread(
 	threadId: string
 ): Promise<string> {
+	console.log("Starting autoTagProblemForThread for threadId:", threadId)
+
 	// 1. Fetch thread with all its messages
 	const thread = await db.query.threads.findFirst({
 		where: eq(schema.threads.id, threadId),
@@ -27,11 +29,17 @@ export async function autoTagProblemForThread(
 			}
 		}
 	})
+	console.log("Fetched thread:", {
+		threadId,
+		messageCount: thread?.messages.length
+	})
 
 	if (!thread) {
+		console.log("Thread not found:", threadId)
 		throw new Error("Thread not found")
 	}
 	if (thread.messages.length === 0) {
+		console.log("Thread has no messages:", threadId)
 		throw new Error("Thread has no messages")
 	}
 
@@ -43,11 +51,15 @@ export async function autoTagProblemForThread(
 			description: true
 		}
 	})
+	console.log("Fetched problems:", { count: problems.length, problems })
 
 	// If no problems exist, create a new one immediately
 	if (problems.length === 0) {
+		console.log("No existing problems, creating new one")
 		const newProblem = await createNewProblem(thread)
+		console.log("Created new problem:", newProblem)
 		if (!newProblem) {
+			console.error("Failed to create new problem")
 			throw new Error("Failed to create new problem")
 		}
 		await updateThreadWithProblem(threadId, newProblem.id)
@@ -55,15 +67,21 @@ export async function autoTagProblemForThread(
 	}
 
 	// 3. Find best matching problem
+	console.log("Finding best matching problem")
 	const match = await findBestMatchingProblem(thread, problems)
+	console.log("Match result:", match)
 	if (!match) {
+		console.error("Failed to classify thread")
 		throw new Error("Failed to classify thread")
 	}
 
 	// 4. If no good match found, create new problem
 	if (!match.problemId) {
+		console.log("No good match found, creating new problem")
 		const newProblem = await createNewProblem(thread)
+		console.log("Created new problem:", newProblem)
 		if (!newProblem) {
+			console.error("Failed to create new problem")
 			throw new Error("Failed to create new problem")
 		}
 		await updateThreadWithProblem(threadId, newProblem.id)
@@ -71,6 +89,7 @@ export async function autoTagProblemForThread(
 	}
 
 	// 5. Update thread with matched problem
+	console.log("Updating thread with matched problem:", match.problemId)
 	await updateThreadWithProblem(threadId, match.problemId)
 	return match.problemId
 }
@@ -97,6 +116,11 @@ async function findBestMatchingProblem(
 	thread: Thread,
 	problems: { id: string; title: string; description: string }[]
 ): Promise<ClassificationResult | null> {
+	console.log("Starting findBestMatchingProblem", {
+		messageCount: thread.messages.length,
+		problemCount: problems.length
+	})
+
 	const completion = await openai.beta.chat.completions.parse({
 		model: "gpt-4o-2024-08-06",
 		messages: [
@@ -119,8 +143,13 @@ ${thread.messages.map((m) => `[${m.type}] ${m.content}`).join("\n\n")}`
 		],
 		response_format: zodResponseFormat(ClassificationSchema, "classification")
 	})
+	console.log(
+		"OpenAI classification response:",
+		completion.choices[0]?.message?.parsed
+	)
 
 	if (!completion.choices[0]?.message?.parsed) {
+		console.log("No parsed response from OpenAI")
 		return null
 	}
 	return completion.choices[0].message.parsed
@@ -135,6 +164,10 @@ const ProblemCreationSchema = z.object({
  * Create a new problem category based on the thread content.
  */
 async function createNewProblem(thread: Thread) {
+	console.log("Starting createNewProblem", {
+		messageCount: thread.messages.length
+	})
+
 	const completion = await openai.beta.chat.completions.parse({
 		model: "gpt-4o-2024-08-06",
 		messages: [
@@ -157,12 +190,19 @@ ${thread.messages.map((m) => `[${m.type}] ${m.content}`).join("\n\n")}`
 			"problem_creation"
 		)
 	})
+	console.log(
+		"OpenAI problem creation response:",
+		completion.choices[0]?.message?.parsed
+	)
 
 	if (!completion.choices[0]?.message?.parsed) {
+		console.log("No parsed response from OpenAI")
 		return null
 	}
 
 	const result = completion.choices[0].message.parsed
+	console.log("Inserting new problem:", result)
+
 	const inserted = await db
 		.insert(schema.problems)
 		.values({
@@ -174,6 +214,7 @@ ${thread.messages.map((m) => `[${m.type}] ${m.content}`).join("\n\n")}`
 		})
 		.then(([problem]) => problem)
 
+	console.log("Inserted new problem:", inserted)
 	return inserted
 }
 
@@ -181,8 +222,10 @@ ${thread.messages.map((m) => `[${m.type}] ${m.content}`).join("\n\n")}`
  * Update the thread with the given problemId
  */
 async function updateThreadWithProblem(threadId: string, problemId: string) {
+	console.log("Updating thread with problem:", { threadId, problemId })
 	await db
 		.update(schema.threads)
 		.set({ problemId })
 		.where(eq(schema.threads.id, threadId))
+	console.log("Thread update completed")
 }
