@@ -11,19 +11,25 @@
 import { faker } from "@faker-js/faker"
 import { db } from "./index"
 import * as schema from "./schema"
+import { initialProblems, supportThreads } from "./seed-data"
 
 /**
  * Utility to pick a random item from an array.
  */
 function randomItem<T>(array: T[]): T {
-	// biome-ignore lint/style/noNonNullAssertion: array index is guaranteed to be in bounds
-	return array[Math.floor(Math.random() * array.length)]!
+	if (array.length === 0) {
+		throw new Error("Cannot pick from empty array")
+	}
+	const index = Math.floor(Math.random() * array.length)
+	const item = array.at(index)
+	if (!item) {
+		throw new Error("Failed to get random item")
+	}
+	return item
 }
 
 async function main() {
-	// biome-ignore lint/suspicious/noConsole: Acceptable in seed script for progress tracking
 	console.log("Cleaning up existing data...")
-	// Delete in reverse order of dependencies to avoid foreign key conflicts
 	await db.delete(schema.messages)
 	await db.delete(schema.files)
 	await db.delete(schema.threads)
@@ -32,7 +38,6 @@ async function main() {
 	await db.delete(schema.users)
 	await db.delete(schema.teams)
 
-	// biome-ignore lint/suspicious/noConsole: Acceptable in seed script for progress tracking
 	console.log("Creating default team...")
 	const defaultTeam = await db
 		.insert(schema.teams)
@@ -47,300 +52,95 @@ async function main() {
 			return team
 		})
 
-	// biome-ignore lint/suspicious/noConsole: Acceptable in seed script for progress tracking
-	console.log("Seeding additional teams...")
-	const teamCount = 16
-	const uniqueTeamNames: string[] = []
-	while (uniqueTeamNames.length < teamCount) {
-		const teamName = `Team ${faker.food.dish()}`
-		if (!uniqueTeamNames.includes(teamName)) {
-			uniqueTeamNames.push(teamName)
-		}
-	}
-
-	const additionalTeams = await db
-		.insert(schema.teams)
-		.values(
-			uniqueTeamNames.map((name) => ({
-				name
-			}))
-		)
-		.returning()
-
-	const createdTeams = [defaultTeam, ...additionalTeams]
-
-	// biome-ignore lint/suspicious/noConsole: Acceptable in seed script for progress tracking
 	console.log("Seeding users...")
-	const userCount = 40
+	const userCount = 10
 	const createdUsers = await db
 		.insert(schema.users)
 		.values(
 			Array.from({ length: userCount }).map((_, index) => ({
 				clerkId: faker.string.uuid(),
-				// First 3 users go to default team, rest are random
-				teamId: index < 3 ? defaultTeam.id : randomItem(createdTeams).id,
+				teamId: defaultTeam.id,
 				avatar: faker.image.avatar(),
 				email: faker.internet.email(),
 				name: faker.person.fullName(),
-				// Make first user admin, rest are random
-				role:
-					index === 0
-						? "admin"
-						: faker.helpers.arrayElement(["admin", "member"])
+				role: index === 0 ? ("admin" as const) : ("member" as const)
 			}))
 		)
 		.returning()
 
-	// biome-ignore lint/suspicious/noConsole: Acceptable in seed script for progress tracking
 	console.log("Seeding customers...")
-	const customerCount = 40
+	const customerCount = 20
 	const createdCustomers = await db
 		.insert(schema.customers)
 		.values(
-			Array.from({ length: customerCount }).map(() => {
-				// Generate random metadata fields
-				const metadataFieldCount = faker.number.int({ min: 1, max: 5 })
-				const metadata: Record<string, string> = {}
-
-				for (let i = 0; i < metadataFieldCount; i++) {
-					// Generate random key-value pairs
-					const key = faker.helpers.arrayElement([
-						"phone",
-						"address",
-						"company",
-						"industry",
-						"subscription",
-						"plan",
-						"source",
-						"language",
-						"timezone",
-						"notes"
-					])
-
-					// Generate appropriate value based on the key
-					let value: string
-					switch (key) {
-						case "phone":
-							value = faker.phone.number()
-							break
-						case "address":
-							value = faker.location.streetAddress()
-							break
-						case "company":
-							value = faker.company.name()
-							break
-						case "industry":
-							value = faker.company.buzzNoun()
-							break
-						case "subscription":
-							value = faker.helpers.arrayElement([
-								"free",
-								"basic",
-								"premium",
-								"enterprise"
-							])
-							break
-						case "plan":
-							value = faker.helpers.arrayElement([
-								"monthly",
-								"annual",
-								"lifetime"
-							])
-							break
-						case "source":
-							value = faker.helpers.arrayElement([
-								"website",
-								"referral",
-								"ads",
-								"social"
-							])
-							break
-						case "language":
-							value = faker.helpers.arrayElement(["en", "es", "fr", "de", "pt"])
-							break
-						case "timezone":
-							value = faker.location.timeZone()
-							break
-						case "notes":
-							value = faker.lorem.sentence()
-							break
-						default:
-							value = faker.word.sample()
-					}
-
-					metadata[key] = value
-				}
-
-				return {
-					email: faker.internet.email(),
-					name: faker.person.fullName(),
-					metadata
-				}
-			})
+			Array.from({ length: customerCount }).map(() => ({
+				email: faker.internet.email(),
+				name: faker.person.fullName(),
+				metadata: {}
+			}))
 		)
 		.returning()
 
-	// biome-ignore lint/suspicious/noConsole: Acceptable in seed script for progress tracking
-	console.log("Seeding problems...")
-	// Get unique ethnic categories
-	const uniqueCategories: string[] = []
-	while (uniqueCategories.length < 20) {
-		const category = faker.food.ethnicCategory()
-		if (!uniqueCategories.includes(category)) {
-			uniqueCategories.push(category)
-		}
-	}
-
+	console.log("Seeding initial problem categories...")
 	const createdProblems = await db
 		.insert(schema.problems)
-		.values(
-			uniqueCategories.map((category) => ({
-				title: category,
-				description: `Common issues and solutions for ${category} cuisine`
-			}))
-		)
+		.values(initialProblems)
 		.returning()
 
-	// biome-ignore lint/suspicious/noConsole: Acceptable in seed script for progress tracking
-	console.log("Seeding threads...")
-	const threadCount = 60
+	console.log("Seeding support threads with realistic conversations...")
+	// Create multiple instances of each thread template with different customers
+	const threadInstances = supportThreads.flatMap((template, templateIndex) =>
+		// Create 5-10 instances of each thread template
+		Array.from({ length: faker.number.int({ min: 5, max: 10 }) }).map(() => ({
+			customerId: randomItem(createdCustomers).id,
+			subject: template.subject,
+			status: "open" as const,
+			priority: faker.helpers.arrayElement(["urgent", "non-urgent"] as const),
+			assignedToClerkId: faker.datatype.boolean(0.8)
+				? randomItem(createdUsers).clerkId
+				: null,
+			problemId: randomItem(createdProblems).id,
+			statusChangedAt: faker.date.recent({ days: 90 }),
+			assignedAt: faker.date.recent({ days: 90 }),
+			// Store the template index for message creation
+			_templateIndex: templateIndex // This won't be inserted since it's not in the schema
+		}))
+	)
+
 	const createdThreads = await db
 		.insert(schema.threads)
-		.values(
-			Array.from({ length: threadCount }).map(() => {
-				// Generate base timestamp for consistency
-				const createdAtDate = faker.date.recent({ days: 30 })
-
-				// Determine if thread will be assigned
-				const willBeAssigned = faker.datatype.boolean()
-				const assignedToClerkId = willBeAssigned
-					? randomItem(createdUsers).clerkId
-					: null
-
-				// If assigned, assignedAt must be after creation but before now
-				const assignedAt = willBeAssigned
-					? faker.date.between({
-							from: createdAtDate,
-							to: new Date()
-						})
-					: null
-
-				// Generate status and its change time
-				const status = faker.helpers.arrayElement<"open" | "closed" | "spam">([
-					"open",
-					"closed",
-					"spam"
-				])
-
-				// Status change must be after creation
-				const statusChangedAt = faker.date.between({
-					from: createdAtDate,
-					to: new Date()
-				})
-
-				return {
-					customerId: randomItem(createdCustomers).id,
-					problemId: faker.datatype.boolean()
-						? randomItem(createdProblems).id
-						: null,
-					assignedToClerkId,
-					assignedAt,
-					priority: faker.helpers.arrayElement<"urgent" | "non-urgent">([
-						"urgent",
-						"non-urgent"
-					]),
-					status,
-					statusChangedAt,
-					subject: faker.lorem.sentence(),
-					createdAt: createdAtDate,
-					updatedAt: statusChangedAt // Use the latest known change as updatedAt
-				}
-			})
-		)
+		.values(threadInstances.map(({ _templateIndex, ...thread }) => thread)) // Remove _templateIndex before insert
 		.returning()
 
-	// biome-ignore lint/suspicious/noConsole: Acceptable in seed script for progress tracking
-	console.log("Seeding files...")
-	const fileCount = 20 // Changed from 5
-	const createdFiles = await db
-		.insert(schema.files)
-		.values(
-			Array.from({ length: fileCount }).map(() => ({
-				name: `${faker.word.sample()}.webp`,
-				size: faker.number.int({ min: 20_000, max: 500_000 }), // 20KB - 500KB (WebP is typically smaller)
-				type: "image/webp",
-				url: `https://picsum.photos/${faker.number.int({ min: 200, max: 800 })}/${faker.number.int({ min: 200, max: 800 })}?format=webp` // Explicitly request WebP format
-			}))
-		)
-		.returning()
-
-	// biome-ignore lint/suspicious/noConsole: Acceptable in seed script for progress tracking
-	console.log("Seeding messages...")
-	const staffMessages: Array<typeof schema.messages.$inferInsert> = []
-	const widgetMessages: Array<typeof schema.messages.$inferInsert> = []
-	const emailMessages: Array<typeof schema.messages.$inferInsert> = []
-
-	for (const thread of createdThreads) {
-		for (let i = 0; i < 4; i++) {
-			const randomFileId = faker.datatype.boolean()
-				? randomItem(createdFiles).id
-				: null
-
-			// Create messages with random timestamps in the past 30 days
-			const timestamp = faker.date.recent({ days: 30 })
-
-			staffMessages.push({
-				type: "staff",
-				threadId: thread.id,
-				userClerkId: randomItem(createdUsers).clerkId,
-				customerId: null,
-				fileId: randomFileId,
-				messageId: null,
-				content: faker.lorem.paragraph(),
-				createdAt: timestamp,
-				updatedAt: timestamp
-			})
-
-			widgetMessages.push({
-				type: "widget",
-				threadId: thread.id,
-				userClerkId: null,
-				customerId: thread.customerId,
-				fileId: faker.datatype.boolean() ? randomItem(createdFiles).id : null,
-				messageId: null,
-				content: faker.lorem.paragraph(),
-				createdAt: faker.date.recent({ days: 30 }),
-				updatedAt: faker.date.recent({ days: 30 })
-			})
-
-			emailMessages.push({
-				type: "email",
-				threadId: thread.id,
-				userClerkId: null,
-				customerId: thread.customerId,
-				fileId: faker.datatype.boolean() ? randomItem(createdFiles).id : null,
-				messageId: faker.string.uuid(),
-				content: faker.lorem.paragraph(),
-				createdAt: faker.date.recent({ days: 30 }),
-				updatedAt: faker.date.recent({ days: 30 })
-			})
+	console.log("Seeding messages for each thread...")
+	// Create messages for each thread based on templates
+	const allMessages = createdThreads.flatMap((thread, index) => {
+		const template = supportThreads[threadInstances[index]?._templateIndex ?? 0]
+		if (!template) {
+			throw new Error(`No template found for thread ${index}`)
 		}
-	}
 
-	await db
-		.insert(schema.messages)
-		.values([...staffMessages, ...widgetMessages, ...emailMessages])
+		return template.messages.map((msg) => ({
+			type: msg.type,
+			content: msg.content,
+			threadId: thread.id,
+			userClerkId:
+				msg.type === "staff" ? randomItem(createdUsers).clerkId : null,
+			customerId: msg.type !== "staff" ? thread.customerId : null,
+			messageId: msg.type === "email" ? faker.string.uuid() : null,
+			createdAt: faker.date.recent({ days: 30 }),
+			updatedAt: faker.date.recent({ days: 30 })
+		}))
+	})
 
-	// biome-ignore lint/suspicious/noConsole: Acceptable in seed script for progress tracking
+	await db.insert(schema.messages).values(allMessages)
+
 	console.log("Database seeding complete!")
 }
 
 main()
-	.then(() => {
-		process.exit(0)
-	})
+	.then(() => process.exit(0))
 	.catch((err) => {
-		// biome-ignore lint/suspicious/noConsole: Error logging is acceptable in catch blocks
 		console.error("Error seeding database:", err)
 		process.exit(1)
 	})
