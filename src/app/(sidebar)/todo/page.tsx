@@ -55,12 +55,6 @@ export default function TodoPage() {
 			priority: "low"
 		},
 		{
-			title: "Problem Categories System: AI",
-			description:
-				"Implement problem category management, routing rules, and analytics",
-			priority: "low"
-		},
-		{
 			title: "Assignment System: AI",
 			description:
 				"Build auto-assignment logic with load balancing and rotation features",
