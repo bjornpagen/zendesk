@@ -93,7 +93,7 @@ export async function sendWidgetMessage(content: string, threadId: string) {
 		.where(eq(schema.threads.id, thread.id))
 
 	// Classify the problem
-	await autoTagProblemForThread(thread.id)
+	autoTagProblemForThread(thread.id)
 
 	return newMessage
 }

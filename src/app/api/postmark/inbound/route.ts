@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
 			})
 
 			// After the transaction completes, classify the problem
-			await autoTagProblemForThread(result.threadId)
+			autoTagProblemForThread(result.threadId)
 
 			console.log("🎉 Successfully processed email:", {
 				customerId: result.customer.id,
