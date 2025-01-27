@@ -3,6 +3,7 @@
 import { db } from "@/server/db"
 import * as schema from "@/server/db/schema"
 import { eq, asc, desc } from "drizzle-orm"
+import { autoTagProblemForThread } from "./problemClassifier"
 
 /**
  * Get the oldest customer ID for widget-based messaging.
@@ -90,6 +91,9 @@ export async function sendWidgetMessage(content: string, threadId: string) {
 		.update(schema.threads)
 		.set({ lastReadAt: new Date() })
 		.where(eq(schema.threads.id, thread.id))
+
+	// Classify the problem
+	await autoTagProblemForThread(thread.id)
 
 	return newMessage
 }

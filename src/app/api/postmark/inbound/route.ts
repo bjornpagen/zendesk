@@ -3,6 +3,7 @@ import type { PostmarkWebhookPayload } from "@/types/postmark-webhook"
 import { db } from "@/server/db"
 import * as schema from "@/server/db/schema"
 import { uploadToS3 } from "@/server/s3"
+import { autoTagProblemForThread } from "@/server/actions/problemClassifier"
 
 export async function POST(request: NextRequest) {
 	try {
@@ -147,6 +148,9 @@ export async function POST(request: NextRequest) {
 				return { customer, threadId, message }
 			})
 
+			// After the transaction completes, classify the problem
+			await autoTagProblemForThread(result.threadId)
+
 			console.log("🎉 Successfully processed email:", {
 				customerId: result.customer.id,
 				threadId: result.threadId,
@@ -233,6 +237,9 @@ export async function POST(request: NextRequest) {
 
 			return { customer, threadId, message }
 		})
+
+		// After the transaction completes, classify the problem
+		await autoTagProblemForThread(result.threadId)
 
 		console.log("🎉 Successfully processed email:", {
 			customerId: result.customer.id,
