@@ -191,10 +191,12 @@ export const problems = createTable(
 		id: char("id", { length: 24 }).primaryKey().notNull().$default(createId),
 		...timestamps,
 		description: text("description").notNull(),
-		title: text("title").notNull().unique()
+		title: text("title").notNull().unique(),
+		teamId: char("team_id", { length: 24 }).references(() => teams.id)
 	},
 	(table) => ({
-		titleIndex: index("problems_title_idx").on(table.title)
+		titleIndex: index("problems_title_idx").on(table.title),
+		teamIdIndex: index("problems_team_id_idx").on(table.teamId)
 	})
 )
 
@@ -230,7 +232,15 @@ export const messagesRelations = relations(messages, ({ one }) => ({
 }))
 
 export const teamsRelations = relations(teams, ({ many }) => ({
-	users: many(users)
+	users: many(users),
+	problems: many(problems)
+}))
+
+export const problemsRelations = relations(problems, ({ one }) => ({
+	team: one(teams, {
+		fields: [problems.teamId],
+		references: [teams.id]
+	})
 }))
 
 export const usersRelations = relations(users, ({ one }) => ({

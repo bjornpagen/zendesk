@@ -3,45 +3,69 @@ import type * as schema from "./schema"
 type Problem = typeof schema.problems.$inferSelect
 type Message = typeof schema.messages.$inferSelect
 type Thread = typeof schema.threads.$inferSelect
+type Team = typeof schema.teams.$inferSelect
 
 type ThreadTemplate = {
 	subject: Thread["subject"]
 	messages: Array<Pick<Message, "type" | "content">>
 }
 
-export const initialProblems: Omit<
+// Problem with team name instead of ID for initial seeding
+type ProblemWithTeamName = Omit<
 	Problem,
-	"id" | "createdAt" | "updatedAt"
->[] = [
+	"id" | "createdAt" | "updatedAt" | "teamId"
+> & {
+	teamName: string | null
+}
+
+export const initialTeams: Omit<Team, "id" | "createdAt" | "updatedAt">[] = [
+	{
+		name: "Technical Support"
+	},
+	{
+		name: "Customer Success"
+	},
+	{
+		name: "Platform & Security"
+	}
+]
+
+export const initialProblems: ProblemWithTeamName[] = [
 	{
 		title: "Login Authentication",
 		description:
-			"Issues related to user login, authentication failures, password resets, and account access"
+			"Issues related to user login, authentication failures, password resets, and account access",
+		teamName: "Platform & Security"
 	},
 	{
 		title: "Billing & Payments",
 		description:
-			"Questions about invoices, payment processing, subscription changes, and refunds"
+			"Questions about invoices, payment processing, subscription changes, and refunds",
+		teamName: "Customer Success"
 	},
 	{
 		title: "API Integration",
 		description:
-			"Technical support for API usage, webhooks, rate limits, and integration issues"
+			"Technical support for API usage, webhooks, rate limits, and integration issues",
+		teamName: "Technical Support"
 	},
 	{
 		title: "Data Export",
 		description:
-			"Assistance with exporting data, file formats, and bulk operations"
+			"Assistance with exporting data, file formats, and bulk operations",
+		teamName: "Technical Support"
 	},
 	{
 		title: "Performance Issues",
 		description:
-			"Reports of slow loading times, timeouts, or system performance problems"
+			"Reports of slow loading times, timeouts, or system performance problems",
+		teamName: "Platform & Security"
 	},
 	{
 		title: "Feature Requests",
 		description:
-			"User suggestions for new features or improvements to existing functionality"
+			"User suggestions for new features or improvements to existing functionality",
+		teamName: "Customer Success"
 	}
 ]
 

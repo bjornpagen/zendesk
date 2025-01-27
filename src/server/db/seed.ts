@@ -11,7 +11,7 @@
 import { faker } from "@faker-js/faker"
 import { db } from "./index"
 import * as schema from "./schema"
-import { initialProblems, supportThreads } from "./seed-data"
+import { initialProblems, initialTeams, supportThreads } from "./seed-data"
 
 /**
  * Utility to pick a random item from an array.
@@ -39,6 +39,8 @@ async function main() {
 	await db.delete(schema.teams)
 
 	console.log("Creating default team...")
+	// IMPORTANT: Default team must always exist as a fallback for users and problems
+	// that aren't assigned to a specialized team
 	const defaultTeam = await db
 		.insert(schema.teams)
 		.values({
@@ -52,6 +54,16 @@ async function main() {
 			return team
 		})
 
+	console.log("Creating specialized teams...")
+	const specializedTeams = await db
+		.insert(schema.teams)
+		.values(initialTeams)
+		.returning()
+
+	// Create a map of team names to their IDs for easy lookup
+	const allTeams = [defaultTeam, ...specializedTeams]
+	const teamsByName = new Map(allTeams.map((team) => [team.name, team.id]))
+
 	console.log("Seeding users...")
 	const userCount = 10
 	const createdUsers = await db
@@ -59,7 +71,7 @@ async function main() {
 		.values(
 			Array.from({ length: userCount }).map((_, index) => ({
 				clerkId: faker.string.uuid(),
-				teamId: defaultTeam.id,
+				teamId: randomItem(allTeams).id, // Randomly assign users to teams
 				avatar: faker.image.avatar(),
 				email: faker.internet.email(),
 				name: faker.person.fullName(),
@@ -81,10 +93,18 @@ async function main() {
 		)
 		.returning()
 
-	console.log("Seeding initial problem categories...")
+	console.log("Seeding initial problem categories with team assignments...")
+	const problemsWithTeams = initialProblems.map((problem) => ({
+		title: problem.title,
+		description: problem.description,
+		teamId: problem.teamName
+			? (teamsByName.get(problem.teamName) ?? null)
+			: null
+	}))
+
 	const createdProblems = await db
 		.insert(schema.problems)
-		.values(initialProblems)
+		.values(problemsWithTeams)
 		.returning()
 
 	console.log("Seeding support threads with realistic conversations...")
