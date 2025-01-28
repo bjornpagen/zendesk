@@ -203,6 +203,9 @@ export const problems = createTable(
 export const roundRobinState = createTable("round_robin_state", {
 	id: char("id", { length: 24 }).primaryKey().notNull().$default(createId),
 	...timestamps,
+	teamId: char("team_id", { length: 24 })
+		.references(() => teams.id)
+		.unique(),
 	nextIndex: integer("next_index").notNull().default(0)
 })
 
