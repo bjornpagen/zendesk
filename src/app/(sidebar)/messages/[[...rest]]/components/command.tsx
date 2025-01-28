@@ -21,10 +21,13 @@ import {
 	AlertCircle,
 	Clock,
 	MessageCircle,
-	MessageCircleOff
+	MessageCircleOff,
+	Check
 } from "lucide-react"
 import useSWR from "swr"
 import { getProblems, type Problem } from "@/server/actions/problems"
+import { getAssignableUsers, type AssignableUser } from "@/server/actions/users"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 
 interface AppCommandProps {
 	selectedStatuses: string[]
@@ -32,6 +35,7 @@ interface AppCommandProps {
 	selectedPriorities: string[]
 	selectedVisibility: string[]
 	selectedNeedsResponse: string[]
+	selectedAssignees: string[]
 	intextSearch: string
 	onFiltersChange: (filters: {
 		statuses: string[]
@@ -39,6 +43,7 @@ interface AppCommandProps {
 		priorities: string[]
 		visibility: string[]
 		needsResponse: string[]
+		assignees: string[]
 		intext: string
 	}) => void
 }
@@ -49,6 +54,7 @@ export function MessagesCommand({
 	selectedPriorities,
 	selectedVisibility,
 	selectedNeedsResponse,
+	selectedAssignees,
 	intextSearch,
 	onFiltersChange
 }: AppCommandProps) {
@@ -57,6 +63,10 @@ export function MessagesCommand({
 	const inputRef = useRef<HTMLInputElement>(null)
 
 	const { data: problems = [] } = useSWR<Problem[]>("problems", getProblems)
+	const { data: assignableUsers = [] } = useSWR<AssignableUser[]>(
+		"assignableUsers",
+		getAssignableUsers
+	)
 
 	useEffect(() => {
 		const focusInput = () => {
@@ -87,6 +97,7 @@ export function MessagesCommand({
 				priorities: selectedPriorities,
 				visibility: selectedVisibility,
 				needsResponse: selectedNeedsResponse,
+				assignees: selectedAssignees,
 				intext: intextSearch
 			})
 		},
@@ -96,6 +107,7 @@ export function MessagesCommand({
 			selectedPriorities,
 			selectedVisibility,
 			selectedNeedsResponse,
+			selectedAssignees,
 			intextSearch,
 			onFiltersChange
 		]
@@ -112,6 +124,7 @@ export function MessagesCommand({
 				priorities: selectedPriorities,
 				visibility: selectedVisibility,
 				needsResponse: selectedNeedsResponse,
+				assignees: selectedAssignees,
 				intext: intextSearch
 			})
 		},
@@ -121,6 +134,7 @@ export function MessagesCommand({
 			selectedPriorities,
 			selectedVisibility,
 			selectedNeedsResponse,
+			selectedAssignees,
 			intextSearch,
 			onFiltersChange
 		]
@@ -137,6 +151,7 @@ export function MessagesCommand({
 				priorities: newPriorities,
 				visibility: selectedVisibility,
 				needsResponse: selectedNeedsResponse,
+				assignees: selectedAssignees,
 				intext: intextSearch
 			})
 		},
@@ -146,6 +161,7 @@ export function MessagesCommand({
 			selectedPriorities,
 			selectedVisibility,
 			selectedNeedsResponse,
+			selectedAssignees,
 			intextSearch,
 			onFiltersChange
 		]
@@ -162,6 +178,7 @@ export function MessagesCommand({
 				priorities: selectedPriorities,
 				visibility: newVisibility,
 				needsResponse: selectedNeedsResponse,
+				assignees: selectedAssignees,
 				intext: intextSearch
 			})
 		},
@@ -171,6 +188,7 @@ export function MessagesCommand({
 			selectedProblems,
 			selectedPriorities,
 			selectedNeedsResponse,
+			selectedAssignees,
 			intextSearch,
 			onFiltersChange
 		]
@@ -187,6 +205,7 @@ export function MessagesCommand({
 				priorities: selectedPriorities,
 				visibility: selectedVisibility,
 				needsResponse: newNeedsResponse,
+				assignees: selectedAssignees,
 				intext: intextSearch
 			})
 		},
@@ -196,6 +215,35 @@ export function MessagesCommand({
 			selectedProblems,
 			selectedPriorities,
 			selectedVisibility,
+			selectedAssignees,
+			intextSearch,
+			onFiltersChange
+		]
+	)
+
+	const toggleAssignee = useCallback(
+		(clerkId: string) => {
+			const newAssignees = selectedAssignees.includes(clerkId)
+				? selectedAssignees.filter((a) => a !== clerkId)
+				: [...selectedAssignees, clerkId]
+
+			onFiltersChange({
+				statuses: selectedStatuses,
+				problems: selectedProblems,
+				priorities: selectedPriorities,
+				visibility: selectedVisibility,
+				needsResponse: selectedNeedsResponse,
+				assignees: newAssignees,
+				intext: intextSearch
+			})
+		},
+		[
+			selectedAssignees,
+			selectedStatuses,
+			selectedProblems,
+			selectedPriorities,
+			selectedVisibility,
+			selectedNeedsResponse,
 			intextSearch,
 			onFiltersChange
 		]
@@ -209,6 +257,7 @@ export function MessagesCommand({
 				priorities: selectedPriorities,
 				visibility: selectedVisibility,
 				needsResponse: selectedNeedsResponse,
+				assignees: selectedAssignees,
 				intext: searchText
 			})
 		}
@@ -219,6 +268,7 @@ export function MessagesCommand({
 		selectedPriorities,
 		selectedVisibility,
 		selectedNeedsResponse,
+		selectedAssignees,
 		onFiltersChange
 	])
 
@@ -230,6 +280,7 @@ export function MessagesCommand({
 			priorities: selectedPriorities,
 			visibility: selectedVisibility,
 			needsResponse: selectedNeedsResponse,
+			assignees: selectedAssignees,
 			intext: ""
 		})
 	}, [
@@ -238,6 +289,7 @@ export function MessagesCommand({
 		selectedPriorities,
 		selectedVisibility,
 		selectedNeedsResponse,
+		selectedAssignees,
 		onFiltersChange
 	])
 
@@ -320,6 +372,25 @@ export function MessagesCommand({
 							<Hash className="mr-2 h-4 w-4" />
 							<span className="capitalize">{problem.title}</span>
 							<span className={invisibleStyle}>problem:{problem.title}</span>
+						</CommandItem>
+					))}
+				</CommandGroup>
+				<CommandSeparator />
+				<CommandGroup heading="Filter Assignee" className="p-2">
+					{assignableUsers.map((user) => (
+						<CommandItem
+							key={user.clerkId}
+							onSelect={() => toggleAssignee(user.clerkId)}
+							className="flex items-center gap-2"
+						>
+							<Avatar className="h-5 w-5">
+								<AvatarImage src={user.avatar} />
+								<AvatarFallback>{user.name[0]}</AvatarFallback>
+							</Avatar>
+							<span>{user.name}</span>
+							{selectedAssignees.includes(user.clerkId) && (
+								<Check className="ml-auto h-4 w-4" />
+							)}
 						</CommandItem>
 					))}
 				</CommandGroup>

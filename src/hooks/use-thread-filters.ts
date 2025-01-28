@@ -13,6 +13,7 @@ interface Filters {
 	visibility: string[]
 	needsResponse: string[]
 	intext: string
+	assignees: string[]
 }
 
 // Define the enums for our filter types
@@ -49,7 +50,12 @@ const SearchParamsSchema = z.object({
 		.transform((str) => str.split(","))
 		.pipe(z.array(ThreadNeedsResponse))
 		.optional(),
-	q: z.string().optional()
+	q: z.string().optional(),
+	assignee: z
+		.string()
+		.transform((str) => str.split(","))
+		.pipe(z.array(z.string()))
+		.optional()
 })
 
 export function useThreadFilters() {
@@ -69,7 +75,8 @@ export function useThreadFilters() {
 		priority: selectedPriorities = [],
 		visibility: selectedVisibility = [],
 		needsResponse: selectedNeedsResponse = [],
-		q: intextSearch = ""
+		q: intextSearch = "",
+		assignee: selectedAssignees = []
 	} = parsedParams.success ? parsedParams.data : {}
 
 	const isOpen = command === "open"
@@ -110,7 +117,8 @@ export function useThreadFilters() {
 			selectedPriorities,
 			selectedVisibility,
 			selectedNeedsResponse,
-			intextSearch
+			intextSearch,
+			selectedAssignees
 		],
 		// Fetch function that ignores the key and uses the filter parameters
 		() =>
@@ -120,7 +128,8 @@ export function useThreadFilters() {
 				selectedPriorities,
 				selectedVisibility,
 				selectedNeedsResponse,
-				intextSearch
+				intextSearch,
+				selectedAssignees
 			)
 	)
 
@@ -159,7 +168,8 @@ export function useThreadFilters() {
 					filters.visibility.length > 0 ? filters.visibility : undefined,
 				needsResponse:
 					filters.needsResponse.length > 0 ? filters.needsResponse : undefined,
-				q: filters.intext || undefined
+				q: filters.intext || undefined,
+				assignee: filters.assignees.length > 0 ? filters.assignees : undefined
 			})
 		},
 		[updateSearchParams]
@@ -173,6 +183,7 @@ export function useThreadFilters() {
 		selectedVisibility,
 		selectedNeedsResponse,
 		intextSearch,
+		selectedAssignees,
 		filteredThreads: threads,
 		handleOpenChange,
 		onFiltersChange,

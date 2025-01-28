@@ -32,7 +32,8 @@ export type ThreadWithLatestMessage = {
 /**
  * Fetch threads from the database, optionally filtered by
  * statuses, problems, priorities, visibility (read/unread),
- * needsResponse ("true"/"false"), and intext (subject/messages).
+ * needsResponse ("true"/"false"), intext (subject/messages),
+ * and assignees (clerkIds).
  *
  * needsResponse logic:
  *  - A thread needs response if its final message is NOT "staff".
@@ -44,7 +45,8 @@ export async function getThreads(
 	priorities: ("urgent" | "non-urgent")[] = [],
 	visibility: ("read" | "unread")[] = [],
 	needsResponse: ("true" | "false")[] = [],
-	intext = ""
+	intext = "",
+	assignees: string[] = []
 ): Promise<ThreadWithLatestMessage[]> {
 	const { userId: clerkId } = await auth()
 	if (!clerkId) {
@@ -65,6 +67,10 @@ export async function getThreads(
 	// Filter by priorities
 	if (priorities.length > 0) {
 		conditions.push(inArray(threads.priority, priorities))
+	}
+	// Filter by assignees
+	if (assignees.length > 0) {
+		conditions.push(inArray(threads.assignedToClerkId, assignees))
 	}
 
 	const wantsRead = visibility.includes("read")

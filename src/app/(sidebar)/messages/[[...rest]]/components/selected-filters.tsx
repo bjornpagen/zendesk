@@ -14,6 +14,8 @@ import {
 import { Badge } from "@/components/ui/badge"
 import useSWR from "swr"
 import { getProblems, type Problem } from "@/server/actions/problems"
+import { getAssignableUsers, type AssignableUser } from "@/server/actions/users"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 
 interface SelectedFiltersProps {
 	statuses: string[]
@@ -21,6 +23,7 @@ interface SelectedFiltersProps {
 	priorities: string[]
 	visibility: string[]
 	needsResponse: string[]
+	assignees: string[]
 	intext: string
 	onFilterRemove: (
 		type:
@@ -29,7 +32,8 @@ interface SelectedFiltersProps {
 			| "priority"
 			| "intext"
 			| "visibility"
-			| "needsResponse",
+			| "needsResponse"
+			| "assignee",
 		value: string
 	) => void
 }
@@ -69,10 +73,18 @@ export function MessagesSelectedFilters({
 	priorities,
 	visibility,
 	needsResponse,
+	assignees,
 	intext,
 	onFilterRemove
 }: SelectedFiltersProps) {
 	const { data: problemsList = [] } = useSWR<Problem[]>("problems", getProblems)
+	const { data: assignableUsers = [] } = useSWR<AssignableUser[]>(
+		"assignableUsers",
+		getAssignableUsers
+	)
+	const userMap = Object.fromEntries(
+		assignableUsers.map((u) => [u.clerkId, { name: u.name, avatar: u.avatar }])
+	)
 
 	// Create a map of problem IDs to their titles
 	const problemTitles = Object.fromEntries(
@@ -85,6 +97,7 @@ export function MessagesSelectedFilters({
 		priorities.length === 0 &&
 		visibility.length === 0 &&
 		needsResponse.length === 0 &&
+		assignees.length === 0 &&
 		!intext
 	) {
 		return null
@@ -149,6 +162,23 @@ export function MessagesSelectedFilters({
 					</span>
 				</Badge>
 			))}
+			{assignees.map((clerkId) => {
+				const user = userMap[clerkId]
+				return (
+					<Badge
+						key={clerkId}
+						variant="secondary"
+						className="flex items-center gap-2 cursor-pointer"
+						onClick={() => onFilterRemove("assignee", clerkId)}
+					>
+						<Avatar className="h-4 w-4">
+							<AvatarImage src={user?.avatar} />
+							<AvatarFallback>{user?.name?.[0] || "U"}</AvatarFallback>
+						</Avatar>
+						<span>{user?.name || clerkId}</span>
+					</Badge>
+				)
+			})}
 			{intext && (
 				<Badge
 					variant="secondary"

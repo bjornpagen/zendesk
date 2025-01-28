@@ -22,6 +22,7 @@ export function Messages() {
 		selectedPriorities,
 		selectedVisibility,
 		selectedNeedsResponse,
+		selectedAssignees,
 		intextSearch,
 		filteredThreads,
 		handleOpenChange,
@@ -56,6 +57,7 @@ export function Messages() {
 				priorities={selectedPriorities}
 				visibility={selectedVisibility}
 				needsResponse={selectedNeedsResponse}
+				assignees={selectedAssignees}
 				intext={intextSearch}
 				onFilterRemove={(type, value) => {
 					if (type === "status") {
@@ -85,7 +87,13 @@ export function Messages() {
 					} else if (type === "needsResponse") {
 						updateSearchParams({
 							needsResponse:
-								selectedNeedsResponse.filter((r) => r !== value).join(",") ||
+								selectedNeedsResponse.filter((n) => n !== value).join(",") ||
+								undefined
+						})
+					} else if (type === "assignee") {
+						updateSearchParams({
+							assignee:
+								selectedAssignees.filter((a) => a !== value).join(",") ||
 								undefined
 						})
 					} else if (type === "intext") {
@@ -135,6 +143,7 @@ export function Messages() {
 							selectedPriorities={selectedPriorities}
 							selectedVisibility={selectedVisibility}
 							selectedNeedsResponse={selectedNeedsResponse}
+							selectedAssignees={selectedAssignees}
 							intextSearch={intextSearch}
 							onFiltersChange={onFiltersChange}
 						/>
