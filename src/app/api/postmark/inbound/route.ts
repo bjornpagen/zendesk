@@ -4,6 +4,7 @@ import { db } from "@/server/db"
 import * as schema from "@/server/db/schema"
 import { uploadToS3 } from "@/server/s3"
 import { autoTagProblemForThread } from "@/server/actions/problemClassifier"
+import { roundRobinAssignThread } from "@/server/actions/roundRobin"
 import { eq } from "drizzle-orm"
 
 export async function POST(request: NextRequest) {
@@ -169,6 +170,18 @@ export async function POST(request: NextRequest) {
 				await autoTagProblemForThread(result.threadId)
 			}
 
+			// After classification, assign to a user if not already assigned
+			const thread = await db.query.threads.findFirst({
+				where: eq(schema.threads.id, result.threadId),
+				columns: {
+					assignedToClerkId: true
+				}
+			})
+
+			if (thread && !thread.assignedToClerkId) {
+				await roundRobinAssignThread(result.threadId)
+			}
+
 			console.log("🎉 Successfully processed email:", {
 				customerId: result.customer.id,
 				threadId: result.threadId,
@@ -274,6 +287,18 @@ export async function POST(request: NextRequest) {
 		// After the transaction completes, classify the problem only if needed
 		if (!result.problemId) {
 			await autoTagProblemForThread(result.threadId)
+		}
+
+		// After classification, assign to a user if not already assigned
+		const thread = await db.query.threads.findFirst({
+			where: eq(schema.threads.id, result.threadId),
+			columns: {
+				assignedToClerkId: true
+			}
+		})
+
+		if (thread && !thread.assignedToClerkId) {
+			await roundRobinAssignThread(result.threadId)
 		}
 
 		console.log("🎉 Successfully processed email:", {

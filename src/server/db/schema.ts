@@ -200,6 +200,12 @@ export const problems = createTable(
 	})
 )
 
+export const roundRobinState = createTable("round_robin_state", {
+	id: char("id", { length: 24 }).primaryKey().notNull().$default(createId),
+	...timestamps,
+	nextIndex: integer("next_index").notNull().default(0)
+})
+
 export const threadsRelations = relations(threads, ({ many, one }) => ({
 	messages: many(messages),
 	customer: one(customers, {

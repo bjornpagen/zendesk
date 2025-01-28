@@ -4,6 +4,7 @@ import { db } from "@/server/db"
 import * as schema from "@/server/db/schema"
 import { eq, asc, desc } from "drizzle-orm"
 import { autoTagProblemForThread } from "./problemClassifier"
+import { roundRobinAssignThread } from "./roundRobin"
 
 /**
  * Get the oldest customer ID for widget-based messaging.
@@ -50,7 +51,8 @@ export async function getWidgetThread(threadId: string) {
 			subject: true,
 			createdAt: true,
 			updatedAt: true,
-			problemId: true
+			problemId: true,
+			assignedToClerkId: true
 		}
 	})
 
@@ -96,6 +98,11 @@ export async function sendWidgetMessage(content: string, threadId: string) {
 	// Only classify if the thread doesn't have a problem assigned
 	if (!thread.problemId) {
 		await autoTagProblemForThread(thread.id)
+	}
+
+	// Only assign if the thread doesn't have a user assigned
+	if (!thread.assignedToClerkId) {
+		await roundRobinAssignThread(thread.id)
 	}
 
 	return newMessage
