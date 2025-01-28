@@ -19,15 +19,9 @@ interface Todo {
 export default function TodoPage() {
 	const todos = [
 		{
-			title: "Assignment System: AI",
+			title: "Parse Inbound Emails: AI",
 			description:
-				"Build intelligent auto-assignment system for tickets using AI. Features include: load balancing based on agent capacity, skill-based routing, round-robin distribution, handling of vacation/away status, and learning from past assignment success rates. System should optimize for even workload distribution while maintaining high customer satisfaction.",
-			priority: "high"
-		},
-		{
-			title: "AI Response Agent",
-			description:
-				"Implement AI agent for automated ticket response and escalation. System should handle initial response generation, intent classification, common issue resolution, and smart escalation to human agents. Include multi-language support, quality assurance checks, and safety guardrails. Must integrate with existing knowledge base and maintain detailed interaction logs.",
+				"Implement advanced email parsing system using AI to handle complex email threads. Features: clean formatting of top-posted replies, signature removal, attachment handling, quoted text identification, and key information extraction. Should support multiple email formats and languages while maintaining conversation context.",
 			priority: "high"
 		},
 		{
@@ -37,10 +31,10 @@ export default function TodoPage() {
 			priority: "high"
 		},
 		{
-			title: "Parse Inbound Emails: AI",
+			title: "AI Response Agent",
 			description:
-				"Implement advanced email parsing system using AI to handle complex email threads. Features: clean formatting of top-posted replies, signature removal, attachment handling, quoted text identification, and key information extraction. Should support multiple email formats and languages while maintaining conversation context.",
-			priority: "medium"
+				"Implement AI agent for automated ticket response and escalation. System should handle initial response generation, intent classification, common issue resolution, and smart escalation to human agents. Include multi-language support, quality assurance checks, and safety guardrails. Must integrate with existing knowledge base and maintain detailed interaction logs.",
+			priority: "high"
 		},
 		{
 			title: "Add Build Widget Script",
