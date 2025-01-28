@@ -22,7 +22,7 @@ import {
 	createCategory,
 	updateCategory
 } from "@/server/actions/categories"
-import { getTeamMembers } from "@/server/actions/teams"
+import { getAllTeams } from "@/server/actions/teams"
 import useSWR from "swr"
 
 interface CategoryDialogProps {
@@ -44,12 +44,7 @@ export function CategoryDialog({
 	const [isSubmitting, setIsSubmitting] = useState(false)
 
 	// Fetch teams for the dropdown
-	const { data: teamMembers = [] } = useSWR("team-members", getTeamMembers)
-	const teams = Array.from(
-		new Map(
-			teamMembers.map((m) => [m.teamId, { id: m.teamId, name: m.team }])
-		).values()
-	)
+	const { data: teams = [] } = useSWR("teams", getAllTeams)
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
@@ -102,14 +97,16 @@ export function CategoryDialog({
 
 					<div className="space-y-2">
 						<Select
-							value={teamId ?? undefined}
-							onValueChange={(value) => setTeamId(value || null)}
+							value={teamId ?? "none"}
+							onValueChange={(value) =>
+								setTeamId(value === "none" ? null : value)
+							}
 						>
 							<SelectTrigger>
 								<SelectValue placeholder="Select Team (Optional)" />
 							</SelectTrigger>
 							<SelectContent>
-								<SelectItem value="">No Team</SelectItem>
+								<SelectItem value="none">No Team</SelectItem>
 								{teams.map((team) => (
 									<SelectItem key={team.id} value={team.id}>
 										{team.name}

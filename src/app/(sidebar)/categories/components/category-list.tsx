@@ -48,7 +48,7 @@ export function CategoryList({ initialCategories }: CategoryListProps) {
 				open={isCreateDialogOpen}
 				onOpenChange={setIsCreateDialogOpen}
 				onSuccess={(newCategory: Category) => {
-					setCategories([newCategory, ...categories])
+					setCategories([...categories, newCategory])
 					setIsCreateDialogOpen(false)
 				}}
 			/>

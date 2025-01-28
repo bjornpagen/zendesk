@@ -28,7 +28,7 @@ export async function getCategories(): Promise<Category[]> {
 	}
 
 	return db.query.problems.findMany({
-		orderBy: (problems, { desc }) => [desc(problems.createdAt)]
+		orderBy: (problems, { asc }) => [asc(problems.title)]
 	})
 }
 

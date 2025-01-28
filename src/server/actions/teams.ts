@@ -81,3 +81,20 @@ export async function getTeam(teamId: string): Promise<Team> {
 	}
 	return team
 }
+
+export async function getAllTeams(): Promise<Team[]> {
+	const { userId: clerkId } = await auth()
+	if (!clerkId) {
+		throw new Error("Unauthorized")
+	}
+
+	const teams = await db
+		.select({
+			id: schema.teams.id,
+			name: schema.teams.name
+		})
+		.from(schema.teams)
+		.orderBy(schema.teams.name)
+
+	return teams
+}
