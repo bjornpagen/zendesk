@@ -311,16 +311,25 @@ export function MessagesCommand({
 						<Mail className="mr-2 h-4 w-4" />
 						<span>Open</span>
 						<span className={invisibleStyle}>status:open</span>
+						{selectedStatuses.includes("open") && (
+							<Check className="ml-auto h-4 w-4" />
+						)}
 					</CommandItem>
 					<CommandItem onSelect={() => toggleStatus("closed")}>
 						<CheckCircle className="mr-2 h-4 w-4" />
 						<span>Closed</span>
 						<span className={invisibleStyle}>status:closed</span>
+						{selectedStatuses.includes("closed") && (
+							<Check className="ml-auto h-4 w-4" />
+						)}
 					</CommandItem>
 					<CommandItem onSelect={() => toggleStatus("spam")}>
 						<AlertTriangle className="mr-2 h-4 w-4" />
 						<span>Spam</span>
 						<span className={invisibleStyle}>status:spam</span>
+						{selectedStatuses.includes("spam") && (
+							<Check className="ml-auto h-4 w-4" />
+						)}
 					</CommandItem>
 				</CommandGroup>
 				<CommandSeparator />
@@ -329,11 +338,17 @@ export function MessagesCommand({
 						<MessageCircle className="mr-2 h-4 w-4" />
 						<span>Needs Response</span>
 						<span className={invisibleStyle}>needsResponse:true</span>
+						{selectedNeedsResponse.includes("true") && (
+							<Check className="ml-auto h-4 w-4" />
+						)}
 					</CommandItem>
 					<CommandItem onSelect={() => toggleNeedsResponse("false")}>
 						<MessageCircleOff className="mr-2 h-4 w-4" />
 						<span>Responded</span>
 						<span className={invisibleStyle}>needsResponse:false</span>
+						{selectedNeedsResponse.includes("false") && (
+							<Check className="ml-auto h-4 w-4" />
+						)}
 					</CommandItem>
 				</CommandGroup>
 				<CommandSeparator />
@@ -342,11 +357,17 @@ export function MessagesCommand({
 						<Eye className="mr-2 h-4 w-4" />
 						<span>Read</span>
 						<span className={invisibleStyle}>visibility:read</span>
+						{selectedVisibility.includes("read") && (
+							<Check className="ml-auto h-4 w-4" />
+						)}
 					</CommandItem>
 					<CommandItem onSelect={() => toggleVisibility("unread")}>
 						<EyeOff className="mr-2 h-4 w-4" />
 						<span>Unread</span>
 						<span className={invisibleStyle}>visibility:unread</span>
+						{selectedVisibility.includes("unread") && (
+							<Check className="ml-auto h-4 w-4" />
+						)}
 					</CommandItem>
 				</CommandGroup>
 				<CommandSeparator />
@@ -355,11 +376,17 @@ export function MessagesCommand({
 						<AlertCircle className="mr-2 h-4 w-4" />
 						<span>Urgent</span>
 						<span className={invisibleStyle}>priority:urgent</span>
+						{selectedPriorities.includes("urgent") && (
+							<Check className="ml-auto h-4 w-4" />
+						)}
 					</CommandItem>
 					<CommandItem onSelect={() => togglePriority("non-urgent")}>
 						<Clock className="mr-2 h-4 w-4" />
 						<span>Non-Urgent</span>
 						<span className={invisibleStyle}>priority:non-urgent</span>
+						{selectedPriorities.includes("non-urgent") && (
+							<Check className="ml-auto h-4 w-4" />
+						)}
 					</CommandItem>
 				</CommandGroup>
 				<CommandSeparator />
@@ -372,6 +399,9 @@ export function MessagesCommand({
 							<Hash className="mr-2 h-4 w-4" />
 							<span className="capitalize">{problem.title}</span>
 							<span className={invisibleStyle}>problem:{problem.title}</span>
+							{selectedProblems.includes(problem.id) && (
+								<Check className="ml-auto h-4 w-4" />
+							)}
 						</CommandItem>
 					))}
 				</CommandGroup>
@@ -402,6 +432,9 @@ export function MessagesCommand({
 							{searchText ? `Search for: ${searchText}` : "Type to search"}
 						</span>
 						<span className={invisibleStyle}>intext:{searchText}</span>
+						{intextSearch === searchText && searchText && (
+							<Check className="ml-auto h-4 w-4" />
+						)}
 					</CommandItem>
 					{searchText && (
 						<CommandItem onSelect={clearSearch}>
