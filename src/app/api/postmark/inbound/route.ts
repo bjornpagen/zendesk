@@ -3,9 +3,9 @@ import type { PostmarkWebhookPayload } from "@/types/postmark-webhook"
 import { db } from "@/server/db"
 import * as schema from "@/server/db/schema"
 import { uploadToS3 } from "@/server/s3"
-import { autoTagProblemForThread } from "@/server/actions/problemClassifier"
 import { roundRobinAssignThread } from "@/server/actions/roundRobin"
 import { eq } from "drizzle-orm"
+import { inngest } from "@/inngest/client"
 
 export async function POST(request: NextRequest) {
 	try {
@@ -167,7 +167,10 @@ export async function POST(request: NextRequest) {
 
 			// After the transaction completes, classify the problem only if needed
 			if (!result.problemId) {
-				await autoTagProblemForThread(result.threadId)
+				await inngest.send({
+					name: "problems/autotag",
+					data: { threadId: result.threadId }
+				})
 			}
 
 			// After classification, assign to a user if not already assigned
@@ -179,7 +182,11 @@ export async function POST(request: NextRequest) {
 			})
 
 			if (thread && !thread.assignedToClerkId) {
-				await roundRobinAssignThread(result.threadId)
+				async function delayedRoundRobinAssign() {
+					await new Promise((resolve) => setTimeout(resolve, 10000))
+					await roundRobinAssignThread(result.threadId)
+				}
+				delayedRoundRobinAssign().catch(console.error)
 			}
 
 			console.log("🎉 Successfully processed email:", {
@@ -286,7 +293,10 @@ export async function POST(request: NextRequest) {
 
 		// After the transaction completes, classify the problem only if needed
 		if (!result.problemId) {
-			await autoTagProblemForThread(result.threadId)
+			await inngest.send({
+				name: "problems/autotag",
+				data: { threadId: result.threadId }
+			})
 		}
 
 		// After classification, assign to a user if not already assigned
@@ -298,7 +308,11 @@ export async function POST(request: NextRequest) {
 		})
 
 		if (thread && !thread.assignedToClerkId) {
-			await roundRobinAssignThread(result.threadId)
+			async function delayedRoundRobinAssign() {
+				await new Promise((resolve) => setTimeout(resolve, 10000))
+				await roundRobinAssignThread(result.threadId)
+			}
+			delayedRoundRobinAssign().catch(console.error)
 		}
 
 		console.log("🎉 Successfully processed email:", {
