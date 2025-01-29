@@ -10,16 +10,6 @@ const events = {
 	},
 	"problems/reclassify-all": {
 		data: z.object({})
-	},
-	"problems/find-matching": {
-		data: z.object({
-			threadId: z.string()
-		})
-	},
-	"problems/create-new": {
-		data: z.object({
-			threadId: z.string()
-		})
 	}
 }
 
