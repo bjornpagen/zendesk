@@ -183,7 +183,7 @@ export async function POST(request: NextRequest) {
 
 			if (thread && !thread.assignedToClerkId) {
 				async function delayedRoundRobinAssign() {
-					await new Promise((resolve) => setTimeout(resolve, 10000))
+					await new Promise((resolve) => setTimeout(resolve, 30000))
 					await roundRobinAssignThread(result.threadId)
 				}
 				delayedRoundRobinAssign().catch(console.error)
@@ -309,7 +309,7 @@ export async function POST(request: NextRequest) {
 
 		if (thread && !thread.assignedToClerkId) {
 			async function delayedRoundRobinAssign() {
-				await new Promise((resolve) => setTimeout(resolve, 10000))
+				await new Promise((resolve) => setTimeout(resolve, 30000))
 				await roundRobinAssignThread(result.threadId)
 			}
 			delayedRoundRobinAssign().catch(console.error)

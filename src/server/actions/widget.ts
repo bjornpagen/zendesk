@@ -105,7 +105,7 @@ export async function sendWidgetMessage(content: string, threadId: string) {
 
 	if (!thread.assignedToClerkId) {
 		async function delayedRoundRobinAssign() {
-			await new Promise((resolve) => setTimeout(resolve, 10000))
+			await new Promise((resolve) => setTimeout(resolve, 30000))
 			await roundRobinAssignThread(thread.id)
 		}
 		delayedRoundRobinAssign().catch(console.error)

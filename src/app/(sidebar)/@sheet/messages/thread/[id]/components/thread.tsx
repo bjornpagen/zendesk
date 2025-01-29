@@ -36,6 +36,7 @@ import {
 } from "@/server/actions/metadata"
 import { getCustomerMetadata } from "@/server/actions/metadata"
 import { useMessageSubscription } from "@/hooks/use-message-subscription"
+import { getAssignableUsers, type AssignableUser } from "@/server/actions/users"
 
 import Image from "next/image"
 
@@ -89,6 +90,15 @@ export default function Thread() {
 	const { data: thread, mutate } = useSWR(
 		params.id ? ["thread", params.id] : null,
 		() => getThread(params.id as string)
+	)
+
+	const { data: assignableUsers = [] } = useSWR<AssignableUser[]>(
+		"assignableUsers",
+		getAssignableUsers
+	)
+
+	const userMap = Object.fromEntries(
+		assignableUsers.map((u) => [u.clerkId, { name: u.name, avatar: u.avatar }])
 	)
 
 	// Add Supabase subscription
@@ -459,6 +469,22 @@ export default function Thread() {
 							>
 								{thread.problem?.title || "No Category"}
 							</Badge>
+							{thread.assignedToClerkId && (
+								<Badge variant="secondary" className="flex items-center gap-2">
+									<Avatar className="h-4 w-4">
+										<AvatarImage
+											src={userMap[thread.assignedToClerkId]?.avatar}
+										/>
+										<AvatarFallback>
+											{userMap[thread.assignedToClerkId]?.name?.[0] || "U"}
+										</AvatarFallback>
+									</Avatar>
+									<span>
+										{userMap[thread.assignedToClerkId]?.name ||
+											thread.assignedToClerkId}
+									</span>
+								</Badge>
+							)}
 						</div>
 					</div>
 					<ScrollArea

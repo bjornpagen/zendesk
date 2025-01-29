@@ -43,7 +43,8 @@ export async function getThread(threadId: string) {
 			id: true,
 			subject: true,
 			status: true,
-			priority: true
+			priority: true,
+			assignedToClerkId: true
 		},
 		with: {
 			problem: {
