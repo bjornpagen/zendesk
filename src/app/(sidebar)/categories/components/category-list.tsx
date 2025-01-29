@@ -6,6 +6,7 @@ import { Plus } from "lucide-react"
 import type { Category } from "@/server/actions/categories"
 import { CategoryDialog } from "./category-dialog"
 import { CategoryCard } from "./category-card"
+import { ReclassifyButton } from "./reclassify-button"
 
 interface CategoryListProps {
 	initialCategories: Category[]
@@ -21,10 +22,13 @@ export function CategoryList({ initialCategories }: CategoryListProps) {
 				<div className="text-sm text-muted-foreground">
 					{categories.length} categories
 				</div>
-				<Button onClick={() => setIsCreateDialogOpen(true)}>
-					<Plus className="h-4 w-4 mr-2" />
-					New Category
-				</Button>
+				<div className="flex items-center gap-2">
+					<ReclassifyButton />
+					<Button onClick={() => setIsCreateDialogOpen(true)}>
+						<Plus className="h-4 w-4 mr-2" />
+						New Category
+					</Button>
+				</div>
 			</div>
 
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

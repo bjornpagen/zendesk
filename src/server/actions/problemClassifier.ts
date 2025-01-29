@@ -229,3 +229,69 @@ async function updateThreadWithProblem(threadId: string, problemId: string) {
 		.where(eq(schema.threads.id, threadId))
 	console.log("Thread update completed")
 }
+
+/**
+ * Match a thread to an existing problem category.
+ * Unlike autoTagProblemForThread, this will not create new categories.
+ * Returns null if no good match is found.
+ */
+export async function matchThreadToExistingProblem(
+	threadId: string
+): Promise<string | null> {
+	console.log("Starting matchThreadToExistingProblem for threadId:", threadId)
+
+	// 1. Fetch thread with all its messages
+	const thread = await db.query.threads.findFirst({
+		where: eq(schema.threads.id, threadId),
+		with: {
+			messages: {
+				orderBy: [desc(schema.messages.createdAt)],
+				columns: {
+					content: true,
+					type: true
+				}
+			}
+		}
+	})
+	console.log("Fetched thread:", {
+		threadId,
+		messageCount: thread?.messages.length
+	})
+
+	if (!thread) {
+		console.log("Thread not found:", threadId)
+		throw new Error("Thread not found")
+	}
+	if (thread.messages.length === 0) {
+		console.log("Thread has no messages:", threadId)
+		throw new Error("Thread has no messages")
+	}
+
+	// 2. Fetch all existing problems
+	const problems = await db.query.problems.findMany({
+		columns: {
+			id: true,
+			title: true,
+			description: true
+		}
+	})
+	console.log("Fetched problems:", { count: problems.length })
+
+	// If no problems exist, return null
+	if (problems.length === 0) {
+		console.log("No existing problems found, returning null")
+		return null
+	}
+
+	// 3. Find best matching problem
+	console.log("Finding best matching problem")
+	const match = await findBestMatchingProblem(thread, problems)
+	console.log("Match result:", match)
+	if (!match) {
+		console.log("Failed to classify thread")
+		throw new Error("Failed to classify thread")
+	}
+
+	// 4. Return the matched problem ID or null if no good match
+	return match.problemId
+}
