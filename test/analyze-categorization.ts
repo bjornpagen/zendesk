@@ -20,7 +20,8 @@ async function main() {
 		columns: {
 			subject: true,
 			problemId: true
-		}
+		},
+		orderBy: (threads, { asc }) => [asc(threads.subject)]
 	})
 
 	// Get all problems for lookup
@@ -69,21 +70,21 @@ async function main() {
 	const output = {
 		timestamp: new Date().toISOString(),
 		statistics: stats,
-		threadCategories: results.sort((a, b) =>
-			a.threadSubject.localeCompare(b.threadSubject)
-		)
+		threadCategories: results
 	}
 
 	// Write to file in test directory
+	const formattedDate = new Date().toISOString().split("T")[0]
 	const outputPath = path.join(
 		process.cwd(),
 		"test",
-		"categorization-analysis.json"
+		"json",
+		`${formattedDate}-categorization-analysis.json`
 	)
 	fs.writeFileSync(outputPath, JSON.stringify(output, null, 2))
 
 	console.log(
-		"Analysis complete! Results written to test/categorization-analysis.json"
+		`Analysis complete! Results written to test/json/${formattedDate}-categorization-analysis.json`
 	)
 	console.log("\nSummary:")
 	console.log(`Total Threads: ${totalThreads}`)
