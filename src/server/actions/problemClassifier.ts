@@ -1,7 +1,7 @@
 import { openai } from "@/server/ai"
 import { db } from "@/server/db"
 import * as schema from "@/server/db/schema"
-import { eq, desc } from "drizzle-orm"
+import { eq, desc, inArray } from "drizzle-orm"
 import { z } from "zod"
 import { zodResponseFormat } from "openai/helpers/zod"
 
@@ -122,15 +122,17 @@ async function findBestMatchingProblem(
 	})
 
 	const completion = await openai.beta.chat.completions.parse({
-		model: "gpt-4o-2024-08-06",
+		model: "gpt-4o",
 		messages: [
 			{
 				role: "system",
 				content: `You are a classification assistant that determines which problem category best matches a support thread's content. If none of the categories are a good fit, return null for the problemId.
 
 Your response must include:
-1. problemId: The ID of the best matching category, or null if none match well
-2. explanation: A brief explanation of your choice`
+1. problemId: The exact ID from the provided categories (must be one of the 24 charecter IDs listed), or null if none match well. Never make up an ID.
+2. explanation: A brief explanation of your choice
+
+IMPORTANT: The problemId must be exactly one of the IDs provided in the list, or null. Do not modify or create new IDs.`
 			},
 			{
 				role: "user",
@@ -152,7 +154,23 @@ ${thread.messages.map((m) => `[${m.type}] ${m.content}`).join("\n\n")}`
 		console.log("No parsed response from OpenAI")
 		return null
 	}
-	return completion.choices[0].message.parsed
+
+	const result = completion.choices[0].message.parsed
+
+	// Validate that the problemId is either null or one of the valid IDs
+	if (
+		result.problemId !== null &&
+		!problems.some((p) => p.id === result.problemId)
+	) {
+		console.error("OpenAI returned invalid problemId:", result.problemId)
+		console.error(
+			"Valid IDs are:",
+			problems.map((p) => p.id)
+		)
+		return null
+	}
+
+	return result
 }
 
 const ProblemCreationSchema = z.object({
@@ -169,7 +187,7 @@ async function createNewProblem(thread: Thread) {
 	})
 
 	const completion = await openai.beta.chat.completions.parse({
-		model: "gpt-4o-2024-08-06",
+		model: "gpt-4o",
 		messages: [
 			{
 				role: "system",
@@ -231,18 +249,20 @@ async function updateThreadWithProblem(threadId: string, problemId: string) {
 }
 
 /**
- * Match a thread to an existing problem category.
- * Unlike autoTagProblemForThread, this will not create new categories.
- * Returns null if no good match is found.
+ * Match multiple threads to existing problem categories.
+ * Returns a map of threadId to problemId (or null if no match found).
  */
-export async function matchThreadToExistingProblem(
-	threadId: string
-): Promise<string | null> {
-	console.log("Starting matchThreadToExistingProblem for threadId:", threadId)
+export async function matchThreadsToExistingProblems(
+	threadIds: string[]
+): Promise<Map<string, string | null>> {
+	console.log(
+		"Starting matchThreadsToExistingProblems for threadIds:",
+		threadIds
+	)
 
-	// 1. Fetch thread with all its messages
-	const thread = await db.query.threads.findFirst({
-		where: eq(schema.threads.id, threadId),
+	// 1. Fetch all threads with their messages
+	const threads = await db.query.threads.findMany({
+		where: inArray(schema.threads.id, threadIds),
 		with: {
 			messages: {
 				orderBy: [desc(schema.messages.createdAt)],
@@ -253,19 +273,7 @@ export async function matchThreadToExistingProblem(
 			}
 		}
 	})
-	console.log("Fetched thread:", {
-		threadId,
-		messageCount: thread?.messages.length
-	})
-
-	if (!thread) {
-		console.log("Thread not found:", threadId)
-		throw new Error("Thread not found")
-	}
-	if (thread.messages.length === 0) {
-		console.log("Thread has no messages:", threadId)
-		throw new Error("Thread has no messages")
-	}
+	console.log("Fetched threads:", { count: threads.length })
 
 	// 2. Fetch all existing problems
 	const problems = await db.query.problems.findMany({
@@ -277,21 +285,25 @@ export async function matchThreadToExistingProblem(
 	})
 	console.log("Fetched problems:", { count: problems.length })
 
-	// If no problems exist, return null
+	// If no problems exist, return null for all threads
 	if (problems.length === 0) {
-		console.log("No existing problems found, returning null")
-		return null
+		console.log("No existing problems found, returning null for all threads")
+		return new Map(threadIds.map((id) => [id, null]))
 	}
 
-	// 3. Find best matching problem
-	console.log("Finding best matching problem")
-	const match = await findBestMatchingProblem(thread, problems)
-	console.log("Match result:", match)
-	if (!match) {
-		console.log("Failed to classify thread")
-		throw new Error("Failed to classify thread")
+	// 3. Process each thread
+	const results = new Map<string, string | null>()
+	for (const thread of threads) {
+		if (thread.messages.length === 0) {
+			console.log("Thread has no messages:", thread.id)
+			results.set(thread.id, null)
+			continue
+		}
+
+		const match = await findBestMatchingProblem(thread, problems)
+		console.log("Match result for thread:", { threadId: thread.id, match })
+		results.set(thread.id, match?.problemId ?? null)
 	}
 
-	// 4. Return the matched problem ID or null if no good match
-	return match.problemId
+	return results
 }

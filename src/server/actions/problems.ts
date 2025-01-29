@@ -3,7 +3,7 @@
 import { db } from "@/server/db"
 import * as schema from "@/server/db/schema"
 import { auth } from "@clerk/nextjs/server"
-import { matchThreadToExistingProblem } from "./problemClassifier"
+import { matchThreadsToExistingProblems } from "./problemClassifier"
 import { eq } from "drizzle-orm"
 
 export type Problem = {
@@ -42,75 +42,51 @@ export async function reclassifyAllTickets(): Promise<{
 	failed: number
 	skipped: number
 }> {
-	console.log("Starting reclassifyAllTickets")
 	const { userId: clerkId } = await auth()
 	if (!clerkId) {
-		console.log("Unauthorized attempt to reclassify tickets")
 		throw new Error("Unauthorized")
 	}
 
-	// Get all threads
 	const threads = await db
 		.select({
 			id: schema.threads.id,
 			problemId: schema.threads.problemId
 		})
 		.from(schema.threads)
-	console.log(`Found ${threads.length} threads to process`)
 
-	const results = await Promise.allSettled(
-		threads.map(async (thread) => {
-			try {
-				console.log(`Processing thread ${thread.id}`)
-				const newProblemId = await matchThreadToExistingProblem(thread.id)
+	const stats = { processed: 0, failed: 0, skipped: 0 }
 
-				if (newProblemId === null) {
-					console.log(`No matching category found for thread ${thread.id}`)
-					if (thread.problemId) {
-						console.log(`Removing existing category from thread ${thread.id}`)
-						await db
-							.update(schema.threads)
-							.set({ problemId: null })
-							.where(eq(schema.threads.id, thread.id))
-					}
-					return { status: "skipped" as const }
+	try {
+		const threadIds = threads.map((t) => t.id)
+		const results = await matchThreadsToExistingProblems(threadIds)
+
+		// Batch update threads with their new problemIds
+		for (const thread of threads) {
+			const newProblemId = results.get(thread.id)
+
+			if (!newProblemId) {
+				if (thread.problemId) {
+					await db
+						.update(schema.threads)
+						.set({ problemId: null })
+						.where(eq(schema.threads.id, thread.id))
 				}
+				stats.skipped++
+				continue
+			}
 
-				if (newProblemId === thread.problemId) {
-					console.log(`Thread ${thread.id} category unchanged: ${newProblemId}`)
-					return { status: "fulfilled" as const }
-				}
-
-				console.log(`Updating thread ${thread.id} category to ${newProblemId}`)
+			if (newProblemId !== thread.problemId) {
 				await db
 					.update(schema.threads)
 					.set({ problemId: newProblemId })
 					.where(eq(schema.threads.id, thread.id))
-				return { status: "fulfilled" as const }
-			} catch (error) {
-				console.error(`Error processing thread ${thread.id}:`, error)
-				throw error
 			}
-		})
-	)
+			stats.processed++
+		}
+	} catch (error) {
+		console.error("Error during batch classification:", error)
+		stats.failed = threads.length
+	}
 
-	const stats = results.reduce(
-		(acc, result) => {
-			if (result.status === "fulfilled") {
-				if (result.value.status === "fulfilled") {
-					acc.processed++
-				} else {
-					acc.skipped++
-				}
-			} else {
-				console.error("Thread processing failed:", result.reason)
-				acc.failed++
-			}
-			return acc
-		},
-		{ processed: 0, failed: 0, skipped: 0 }
-	)
-
-	console.log("Reclassification complete:", stats)
 	return stats
 }
