@@ -1,7 +1,7 @@
 import { inngest } from "@/inngest/client"
 import { db } from "@/server/db"
 import * as schema from "@/server/db/schema"
-import { eq, desc } from "drizzle-orm"
+import { eq, desc, inArray } from "drizzle-orm"
 import { z } from "zod"
 import { zodResponseFormat } from "openai/helpers/zod"
 import { openai } from "@/server/ai"
@@ -93,70 +93,8 @@ const problemCategories = inngest.createFunction(
 	}
 )
 
-const classifyThread = inngest.createFunction(
-	{ id: "problems-classify-thread", concurrency: 1 },
-	{ event: "problems/classify-thread" },
-	async ({ event, step }) => {
-		const { threadId, currentProblemId } = event.data
-
-		const thread = await step.run("fetch-thread", () =>
-			db.query.threads.findFirst({
-				where: eq(schema.threads.id, threadId),
-				with: {
-					messages: {
-						orderBy: [desc(schema.messages.createdAt)],
-						columns: {
-							content: true,
-							type: true
-						}
-					}
-				}
-			})
-		)
-		if (!thread || thread.messages.length === 0) {
-			return
-		}
-
-		const problems = await step.run("fetch-problems", () =>
-			db.query.problems.findMany({
-				columns: {
-					id: true,
-					title: true,
-					description: true
-				}
-			})
-		)
-
-		const match = await step.run("find-matching-problem", () =>
-			findBestMatchingProblem(thread, problems)
-		)
-		const newProblemId = match?.problemId ?? null
-
-		if (!newProblemId) {
-			if (currentProblemId) {
-				await step.run("clear-problem", () =>
-					db
-						.update(schema.threads)
-						.set({ problemId: null })
-						.where(eq(schema.threads.id, threadId))
-				)
-			}
-			return
-		}
-
-		if (newProblemId !== currentProblemId) {
-			await step.run("update-problem", () =>
-				db
-					.update(schema.threads)
-					.set({ problemId: newProblemId })
-					.where(eq(schema.threads.id, threadId))
-			)
-		}
-	}
-)
-
 const reclassifyAll = inngest.createFunction(
-	{ id: "problems-reclassify-all", concurrency: 1 },
+	{ id: "problems-reclassify-all" },
 	{ event: "problems/reclassify-all" },
 	async ({ step }) => {
 		const threads = await step.run("fetch-threads", () =>
@@ -168,16 +106,75 @@ const reclassifyAll = inngest.createFunction(
 				.from(schema.threads)
 		)
 
-		// Process each thread by sending a classify event
-		for (const thread of threads) {
-			await step.sendEvent("classify-thread", {
-				name: "problems/classify-thread",
-				data: {
-					threadId: thread.id,
-					currentProblemId: thread.problemId
+		const stats = { processed: 0, failed: 0, skipped: 0 }
+
+		// Fetch all threads with their messages
+		const threadsWithMessages = await step.run("fetch-thread-messages", () =>
+			db.query.threads.findMany({
+				where: inArray(
+					schema.threads.id,
+					threads.map((t) => t.id)
+				),
+				with: {
+					messages: {
+						orderBy: [desc(schema.messages.createdAt)],
+						columns: {
+							content: true,
+							type: true
+						}
+					}
 				}
 			})
+		)
+
+		// Fetch all existing problems
+		const problems = await step.run("fetch-problems", () =>
+			db.query.problems.findMany({
+				columns: {
+					id: true,
+					title: true,
+					description: true
+				}
+			})
+		)
+
+		// Process each thread
+		for (const thread of threadsWithMessages) {
+			if (thread.messages.length === 0) {
+				stats.skipped++
+				continue
+			}
+
+			const match = await step.run(`classify-thread-${thread.id}`, () =>
+				findBestMatchingProblem(thread, problems)
+			)
+			const newProblemId = match?.problemId ?? null
+
+			if (!newProblemId) {
+				if (thread.problemId) {
+					await step.run(`clear-problem-${thread.id}`, () =>
+						db
+							.update(schema.threads)
+							.set({ problemId: null })
+							.where(eq(schema.threads.id, thread.id))
+					)
+				}
+				stats.skipped++
+				continue
+			}
+
+			if (newProblemId !== thread.problemId) {
+				await step.run(`update-problem-${thread.id}`, () =>
+					db
+						.update(schema.threads)
+						.set({ problemId: newProblemId })
+						.where(eq(schema.threads.id, thread.id))
+				)
+			}
+			stats.processed++
 		}
+
+		return stats
 	}
 )
 
@@ -299,4 +296,4 @@ ${thread.messages.map((m) => `[${m.type}] ${m.content}`).join("\n\n")}`
 	return inserted
 }
 
-export default [problemCategories, reclassifyAll, classifyThread]
+export default [problemCategories, reclassifyAll]

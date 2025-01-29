@@ -10,12 +10,6 @@ const events = {
 	},
 	"problems/reclassify-all": {
 		data: z.object({})
-	},
-	"problems/classify-thread": {
-		data: z.object({
-			threadId: z.string(),
-			currentProblemId: z.string().nullable()
-		})
 	}
 }
 
