@@ -129,7 +129,7 @@ export const threads = createTable(
 		customerId: char("customer_id", { length: 24 })
 			.notNull()
 			.references(() => customers.id),
-		problemId: char("problem_id", { length: 24 }),
+		problemId: char("problem_id", { length: 24 }).references(() => problems.id),
 		assignedToClerkId: text("assigned_to_clerk_id").references(
 			() => users.clerkId
 		),

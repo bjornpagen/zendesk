@@ -32,39 +32,39 @@ export const initialTeams: Omit<Team, "id" | "createdAt" | "updatedAt">[] = [
 
 export const initialProblems: ProblemWithTeamName[] = [
 	{
-		title: "Login Authentication",
+		title: "Authentication & Access",
 		description:
-			"Issues related to user login, authentication failures, password resets, and account access",
+			"Issues with login, SSO, MFA, password resets, and user permissions",
 		teamName: "Platform & Security"
 	},
 	{
-		title: "Billing & Payments",
+		title: "API & Integration",
 		description:
-			"Questions about invoices, payment processing, subscription changes, and refunds",
+			"API usage, webhooks, rate limits, version migrations, and third-party integrations",
+		teamName: "Technical Support"
+	},
+	{
+		title: "Performance & Availability",
+		description:
+			"System slowdowns, timeouts, loading issues, and service disruptions",
+		teamName: "Platform & Security"
+	},
+	{
+		title: "Data Management",
+		description:
+			"Data imports/exports, migrations, backups, archival, and custom reporting",
+		teamName: "Technical Support"
+	},
+	{
+		title: "Account & Billing",
+		description:
+			"Subscription management, invoices, payment processing, and account changes",
 		teamName: "Customer Success"
 	},
 	{
-		title: "API Integration",
+		title: "Configuration & Customization",
 		description:
-			"Technical support for API usage, webhooks, rate limits, and integration issues",
-		teamName: "Technical Support"
-	},
-	{
-		title: "Data Export",
-		description:
-			"Assistance with exporting data, file formats, and bulk operations",
-		teamName: "Technical Support"
-	},
-	{
-		title: "Performance Issues",
-		description:
-			"Reports of slow loading times, timeouts, or system performance problems",
-		teamName: "Platform & Security"
-	},
-	{
-		title: "Feature Requests",
-		description:
-			"User suggestions for new features or improvements to existing functionality",
+			"Custom domains, email templates, workflows, and feature configuration",
 		teamName: "Customer Success"
 	}
 ]

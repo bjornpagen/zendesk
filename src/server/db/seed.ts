@@ -108,7 +108,6 @@ async function main() {
 		.returning()
 
 	console.log("Seeding support threads with realistic conversations...")
-	// Create multiple instances of each thread template with different customers
 	const threadInstances = supportThreads.map((template, templateIndex) => ({
 		customerId: randomItem(createdCustomers).id,
 		subject: template.subject,
@@ -117,7 +116,7 @@ async function main() {
 		assignedToClerkId: faker.datatype.boolean(0.8)
 			? randomItem(createdUsers).clerkId
 			: null,
-		problemId: randomItem(createdProblems).id,
+		problemId: null,
 		statusChangedAt: faker.date.recent({ days: 90 }),
 		assignedAt: faker.date.recent({ days: 90 }),
 		_templateIndex: templateIndex // This won't be inserted since it's not in the schema
