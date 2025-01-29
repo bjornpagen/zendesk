@@ -2,41 +2,36 @@
 
 import { Button } from "@/components/ui/button"
 import { reclassifyAllTickets } from "@/server/actions/problems"
-import { useState } from "react"
 import { RefreshCw } from "lucide-react"
+import { toast } from "@/hooks/use-toast"
 
 export function ReclassifyButton() {
-	const [isLoading, setIsLoading] = useState(false)
-	const [status, setStatus] = useState<string>("")
+	const handleReclassify = () => {
+		toast({
+			title: "Reclassifying tickets",
+			description: "This may take a while in the background"
+		})
 
-	const handleReclassify = async () => {
-		try {
-			setIsLoading(true)
-			setStatus("")
-			const result = await reclassifyAllTickets()
-			setStatus(
-				`Processed ${result.processed} tickets${result.skipped > 0 ? `, ${result.skipped} skipped` : ""}${result.failed > 0 ? `, ${result.failed} failed` : ""}`
-			)
-		} catch (error) {
-			setStatus("Failed to reclassify tickets")
-		} finally {
-			setIsLoading(false)
-		}
+		reclassifyAllTickets()
+			.then(() => {
+				toast({
+					title: "Reclassification started",
+					description: "The tickets will be updated in the background"
+				})
+			})
+			.catch(() => {
+				toast({
+					title: "Error",
+					description: "Failed to start reclassification",
+					variant: "destructive"
+				})
+			})
 	}
 
 	return (
-		<div className="flex items-center gap-2">
-			<Button
-				variant="secondary"
-				onClick={handleReclassify}
-				disabled={isLoading}
-			>
-				<RefreshCw className="h-4 w-4 mr-2" />
-				{isLoading ? "Reclassifying..." : "Reclassify All"}
-			</Button>
-			{status && (
-				<span className="text-sm text-muted-foreground">{status}</span>
-			)}
-		</div>
+		<Button variant="secondary" onClick={handleReclassify}>
+			<RefreshCw className="h-4 w-4 mr-2" />
+			Reclassify All
+		</Button>
 	)
 }

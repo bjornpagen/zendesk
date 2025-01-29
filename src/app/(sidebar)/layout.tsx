@@ -1,6 +1,7 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import Sidebar from "./components/sidebar"
 import { syncUser } from "@/server/actions/sync"
+import { Toaster } from "@/components/ui/toaster"
 
 export default async function Layout({
 	children,
@@ -22,6 +23,7 @@ export default async function Layout({
 				</div>
 				{sheet}
 			</main>
+			<Toaster />
 		</SidebarProvider>
 	)
 }

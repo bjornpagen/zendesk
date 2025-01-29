@@ -1,3 +1,3 @@
-import sleep from "./sleep"
+import problemCategories from "./problem-categories"
 
-export default [...sleep]
+export default [...problemCategories]

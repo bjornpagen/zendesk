@@ -3,8 +3,7 @@
 import { db } from "@/server/db"
 import * as schema from "@/server/db/schema"
 import { auth } from "@clerk/nextjs/server"
-import { matchThreadsToExistingProblems } from "./problemClassifier"
-import { eq } from "drizzle-orm"
+import { inngest } from "@/inngest/client"
 
 export type Problem = {
 	id: string
@@ -34,59 +33,16 @@ export async function getProblems(): Promise<Problem[]> {
 }
 
 /**
- * Reclassify all threads into existing problem categories.
- * This will not create new categories, only match threads to existing ones.
+ * Trigger reclassification of all threads
  */
-export async function reclassifyAllTickets(): Promise<{
-	processed: number
-	failed: number
-	skipped: number
-}> {
+export async function reclassifyAllTickets(): Promise<void> {
 	const { userId: clerkId } = await auth()
 	if (!clerkId) {
 		throw new Error("Unauthorized")
 	}
 
-	const threads = await db
-		.select({
-			id: schema.threads.id,
-			problemId: schema.threads.problemId
-		})
-		.from(schema.threads)
-
-	const stats = { processed: 0, failed: 0, skipped: 0 }
-
-	try {
-		const threadIds = threads.map((t) => t.id)
-		const results = await matchThreadsToExistingProblems(threadIds)
-
-		// Batch update threads with their new problemIds
-		for (const thread of threads) {
-			const newProblemId = results.get(thread.id)
-
-			if (!newProblemId) {
-				if (thread.problemId) {
-					await db
-						.update(schema.threads)
-						.set({ problemId: null })
-						.where(eq(schema.threads.id, thread.id))
-				}
-				stats.skipped++
-				continue
-			}
-
-			if (newProblemId !== thread.problemId) {
-				await db
-					.update(schema.threads)
-					.set({ problemId: newProblemId })
-					.where(eq(schema.threads.id, thread.id))
-			}
-			stats.processed++
-		}
-	} catch (error) {
-		console.error("Error during batch classification:", error)
-		stats.failed = threads.length
-	}
-
-	return stats
+	await inngest.send({
+		name: "problems/reclassify-all",
+		data: {}
+	})
 }
