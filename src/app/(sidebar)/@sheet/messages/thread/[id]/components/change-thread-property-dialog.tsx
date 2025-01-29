@@ -130,25 +130,25 @@ export function ChangeThreadPropertyDialog({
 				return
 			}
 
-			let dbField = propertyType
-			if (propertyType === "problem") {
-				dbField = "problemId"
-			}
-			if (propertyType === "assignee") {
-				dbField = "assignedToClerkId"
-			}
+			// Map the UI property type to the database field name
+			const dbField = (() => {
+				switch (propertyType) {
+					case "problem":
+						return "problemId"
+					case "assignee":
+						return "assignedToClerkId"
+					default:
+						return propertyType
+				}
+			})()
 
 			try {
 				// Optimistically update UI
 				onChangeProperty(value)
 				onClose()
 
-				// Update database
-				await updateThreadProperty(
-					params.id as string,
-					dbField as "status" | "priority" | "problemId" | "assignedToClerkId",
-					value
-				)
+				// Update database with correct field type
+				await updateThreadProperty(params.id as string, dbField, value)
 
 				// Revalidate thread data
 				await mutateThread()
@@ -199,6 +199,7 @@ export function ChangeThreadPropertyDialog({
 										{typeof IconComponent === "function" ? (
 											<IconComponent />
 										) : (
+											// @ts-expect-error
 											<IconComponent className="mr-2 h-4 w-4" />
 										)}
 										<span className="ml-2">{option.label}</span>
