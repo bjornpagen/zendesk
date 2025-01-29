@@ -199,7 +199,7 @@ export function ChangeThreadPropertyDialog({
 										{typeof IconComponent === "function" ? (
 											<IconComponent />
 										) : (
-											// @ts-expect-error
+											// @ts-expect-error: idk what this is but it works
 											<IconComponent className="mr-2 h-4 w-4" />
 										)}
 										<span className="ml-2">{option.label}</span>
