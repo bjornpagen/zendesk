@@ -371,7 +371,7 @@ async function sendEmailReply({
  */
 export async function updateThreadProperty(
 	threadId: string,
-	property: "status" | "priority" | "problemId",
+	property: "status" | "priority" | "problemId" | "assignedToClerkId",
 	value: string
 ) {
 	const { userId: clerkId } = await auth()
@@ -381,7 +381,7 @@ export async function updateThreadProperty(
 
 	// Create update object based on property
 	const updateData: Record<string, unknown> = {
-		[property]: value,
+		[property]: value === "" ? null : value, // Handle empty string as null for assignedToClerkId
 		lastReadAt: new Date() // Update read timestamp
 	}
 
@@ -399,6 +399,7 @@ export async function updateThreadProperty(
 			status: schema.threads.status,
 			priority: schema.threads.priority,
 			problemId: schema.threads.problemId,
+			assignedToClerkId: schema.threads.assignedToClerkId,
 			statusChangedAt: schema.threads.statusChangedAt
 		})
 		.then(([thread]) => thread)

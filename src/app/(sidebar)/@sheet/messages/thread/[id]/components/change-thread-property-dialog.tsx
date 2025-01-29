@@ -28,11 +28,13 @@ import useSWR from "swr"
 import { getProblems, type Problem } from "@/server/actions/problems"
 import { updateThreadProperty } from "@/server/actions/thread"
 import { useParams } from "next/navigation"
+import { getAssignableUsers, type AssignableUser } from "@/server/actions/users"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 interface ChangeThreadPropertyDialogProps {
 	isOpen: boolean
 	onClose: () => void
-	propertyType: "status" | "priority" | "problem"
+	propertyType: "status" | "priority" | "problem" | "assignee"
 	currentValue: string
 	onChangeProperty: (newValue: string) => void
 }
@@ -47,6 +49,10 @@ export function ChangeThreadPropertyDialog({
 	const params = useParams()
 	const [searchText, setSearchText] = useState("")
 	const { data: problems = [] } = useSWR<Problem[]>("problems", getProblems)
+	const { data: assignableUsers = [] } = useSWR<AssignableUser[]>(
+		"assignableUsers",
+		getAssignableUsers
+	)
 	const { mutate: mutateThread } = useSWR(
 		params.id ? ["thread", params.id] : null
 	)
@@ -74,9 +80,48 @@ export function ChangeThreadPropertyDialog({
 					label: problem.title,
 					icon: Hash
 				}))
+			case "assignee":
+				return [
+					{
+						value: "",
+						label: "Unassigned",
+						icon: () => (
+							<Avatar className="h-4 w-4">
+								<AvatarFallback>?</AvatarFallback>
+							</Avatar>
+						)
+					},
+					...assignableUsers.map((user) => ({
+						value: user.clerkId,
+						label: user.name,
+						icon: () => (
+							<Avatar className="h-4 w-4">
+								<AvatarImage src={user.avatar} />
+								<AvatarFallback>{user.name[0]}</AvatarFallback>
+							</Avatar>
+						)
+					}))
+				]
 			default:
 				return []
 		}
+	}
+
+	const getDialogTitle = () => {
+		if (propertyType === "problem") {
+			return "Change category"
+		}
+		if (propertyType === "assignee") {
+			return "Assign thread"
+		}
+		return `Change ${propertyType}`
+	}
+
+	const getPlaceholder = () => {
+		if (propertyType === "assignee") {
+			return "Search users..."
+		}
+		return `Search ${propertyType}...`
 	}
 
 	const handleSelect = useCallback(
@@ -85,8 +130,13 @@ export function ChangeThreadPropertyDialog({
 				return
 			}
 
-			// Map propertyType to database field
-			const dbField = propertyType === "problem" ? "problemId" : propertyType
+			let dbField = propertyType
+			if (propertyType === "problem") {
+				dbField = "problemId"
+			}
+			if (propertyType === "assignee") {
+				dbField = "assignedToClerkId"
+			}
 
 			try {
 				// Optimistically update UI
@@ -94,7 +144,11 @@ export function ChangeThreadPropertyDialog({
 				onClose()
 
 				// Update database
-				await updateThreadProperty(params.id as string, dbField, value)
+				await updateThreadProperty(
+					params.id as string,
+					dbField as "status" | "priority" | "problemId" | "assignedToClerkId",
+					value
+				)
 
 				// Revalidate thread data
 				await mutateThread()
@@ -120,32 +174,37 @@ export function ChangeThreadPropertyDialog({
 		<Dialog open={isOpen} onOpenChange={onClose}>
 			<DialogContent className="sm:max-w-[425px]">
 				<DialogHeader>
-					<DialogTitle>
-						Change {propertyType === "problem" ? "category" : propertyType}
-					</DialogTitle>
+					<DialogTitle>{getDialogTitle()}</DialogTitle>
 				</DialogHeader>
 				<Command className="rounded-lg border shadow-md">
 					<CommandInput
-						placeholder={`Search ${propertyType}...`}
+						placeholder={getPlaceholder()}
 						value={searchText}
 						onValueChange={setSearchText}
 					/>
 					<CommandList>
 						<CommandEmpty>No results found.</CommandEmpty>
 						<CommandGroup>
-							{getOptions().map((option) => (
-								<CommandItem
-									key={option.value}
-									onSelect={() => handleSelect(option.value)}
-									className={cn(
-										option.value === currentValue &&
-											"bg-accent text-accent-foreground"
-									)}
-								>
-									<option.icon className="mr-2 h-4 w-4" />
-									<span>{option.label}</span>
-								</CommandItem>
-							))}
+							{getOptions().map((option) => {
+								const IconComponent = option.icon
+								return (
+									<CommandItem
+										key={option.value}
+										onSelect={() => handleSelect(option.value)}
+										className={cn(
+											option.value === currentValue &&
+												"bg-accent text-accent-foreground"
+										)}
+									>
+										{typeof IconComponent === "function" ? (
+											<IconComponent />
+										) : (
+											<IconComponent className="mr-2 h-4 w-4" />
+										)}
+										<span className="ml-2">{option.label}</span>
+									</CommandItem>
+								)
+							})}
 						</CommandGroup>
 					</CommandList>
 				</Command>

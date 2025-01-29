@@ -80,8 +80,9 @@ export default function Thread() {
 	>(null)
 	const [changePropertyDialog, setChangePropertyDialog] = useState<{
 		isOpen: boolean
-		propertyType: "status" | "priority" | "problem"
-	}>({ isOpen: false, propertyType: "status" })
+		propertyType: "status" | "priority" | "problem" | "assignee"
+		currentValue: string
+	}>({ isOpen: false, propertyType: "status", currentValue: "" })
 	const [isAddMetadataOpen, setIsAddMetadataOpen] = useState(false)
 	const [isEditMetadataOpen, setIsEditMetadataOpen] = useState<string | null>(
 		null
@@ -232,9 +233,22 @@ export default function Thread() {
 	}
 
 	const handleChangeProperty = (
-		propertyType: "status" | "priority" | "problem"
+		propertyType: "status" | "priority" | "problem" | "assignee"
 	) => {
-		setChangePropertyDialog({ isOpen: true, propertyType })
+		let currentValue = ""
+		if (propertyType === "problem") {
+			currentValue = thread?.problem?.title || ""
+		} else if (propertyType === "assignee") {
+			currentValue = thread?.assignedToClerkId || ""
+		} else {
+			currentValue = thread?.[propertyType] || ""
+		}
+
+		setChangePropertyDialog({
+			isOpen: true,
+			propertyType,
+			currentValue
+		})
 	}
 
 	const handlePropertyChange = async () => {
@@ -469,22 +483,41 @@ export default function Thread() {
 							>
 								{thread.problem?.title || "No Category"}
 							</Badge>
-							{thread.assignedToClerkId && (
-								<Badge variant="secondary" className="flex items-center gap-2">
-									<Avatar className="h-4 w-4">
-										<AvatarImage
-											src={userMap[thread.assignedToClerkId]?.avatar}
-										/>
-										<AvatarFallback>
-											{userMap[thread.assignedToClerkId]?.name?.[0] || "U"}
-										</AvatarFallback>
-									</Avatar>
-									<span>
-										{userMap[thread.assignedToClerkId]?.name ||
-											thread.assignedToClerkId}
-									</span>
-								</Badge>
-							)}
+							<Badge
+								variant="secondary"
+								className="flex items-center gap-2 cursor-pointer"
+								onClick={() => {
+									setChangePropertyDialog({
+										isOpen: true,
+										propertyType: "assignee",
+										currentValue: thread?.assignedToClerkId || ""
+									})
+								}}
+							>
+								{thread.assignedToClerkId ? (
+									<>
+										<Avatar className="h-4 w-4">
+											<AvatarImage
+												src={userMap[thread.assignedToClerkId]?.avatar}
+											/>
+											<AvatarFallback>
+												{userMap[thread.assignedToClerkId]?.name?.[0] || "U"}
+											</AvatarFallback>
+										</Avatar>
+										<span>
+											{userMap[thread.assignedToClerkId]?.name ||
+												thread.assignedToClerkId}
+										</span>
+									</>
+								) : (
+									<>
+										<Avatar className="h-4 w-4">
+											<AvatarFallback>?</AvatarFallback>
+										</Avatar>
+										<span>Unassigned</span>
+									</>
+								)}
+							</Badge>
 						</div>
 					</div>
 					<ScrollArea
@@ -614,11 +647,7 @@ export default function Thread() {
 					setChangePropertyDialog({ ...changePropertyDialog, isOpen: false })
 				}
 				propertyType={changePropertyDialog.propertyType}
-				currentValue={
-					changePropertyDialog.propertyType === "problem"
-						? (thread.problem?.title ?? "")
-						: (thread[changePropertyDialog.propertyType] as string)
-				}
+				currentValue={changePropertyDialog.currentValue}
 				onChangeProperty={handlePropertyChange}
 			/>
 		</Sheet>
