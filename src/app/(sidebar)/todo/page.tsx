@@ -19,15 +19,15 @@ interface Todo {
 export default function TodoPage() {
 	const todos = [
 		{
-			title: "Parse Inbound Emails: AI",
-			description:
-				"Implement advanced email parsing system using AI to handle complex email threads. Features: clean formatting of top-posted replies, signature removal, attachment handling, quoted text identification, and key information extraction. Should support multiple email formats and languages while maintaining conversation context.",
-			priority: "high"
-		},
-		{
 			title: "Track AI Agent Metrics",
 			description:
 				"Implement comprehensive AI metrics tracking system for monitoring success rates, accuracy, latency, and error rates. Track agent interventions, customer satisfaction correlation, and model drift. Integrate with LangSmith/LangFuse for visualization and alerting. Target >95% success rate for actions and <2s average response time.",
+			priority: "high"
+		},
+		{
+			title: "Parse Inbound Emails: AI",
+			description:
+				"Implement advanced email parsing system using AI to handle complex email threads. Features: clean formatting of top-posted replies, signature removal, attachment handling, quoted text identification, and key information extraction. Should support multiple email formats and languages while maintaining conversation context.",
 			priority: "high"
 		},
 		{
