@@ -15,6 +15,7 @@ export const env = createEnv({
 		CLERK_SECRET_KEY: z.string(),
 		POSTGRES_URL: z.string().url(),
 		POSTMARK_API_KEY: z.string(),
+		INNGEST_APP_NAME: z.string(),
 		NODE_ENV: z
 			.enum(["development", "test", "production"])
 			.default("development")
@@ -52,6 +53,7 @@ export const env = createEnv({
 		POSTGRES_URL: process.env.POSTGRES_URL,
 		NODE_ENV: process.env.NODE_ENV,
 		POSTMARK_API_KEY: process.env.POSTMARK_API_KEY,
+		INNGEST_APP_NAME: process.env.INNGEST_APP_NAME,
 		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
 			process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
 		CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
