@@ -1,4 +1,4 @@
-import { db } from "./index"
+import { db } from "../src/server/db"
 import fs from "node:fs"
 import path from "node:path"
 
@@ -74,12 +74,16 @@ async function main() {
 		)
 	}
 
-	// Write to file
-	const outputPath = path.join(process.cwd(), "categorization-analysis.json")
+	// Write to file in test directory
+	const outputPath = path.join(
+		process.cwd(),
+		"test",
+		"categorization-analysis.json"
+	)
 	fs.writeFileSync(outputPath, JSON.stringify(output, null, 2))
 
 	console.log(
-		"Analysis complete! Results written to categorization-analysis.json"
+		"Analysis complete! Results written to test/categorization-analysis.json"
 	)
 	console.log("\nSummary:")
 	console.log(`Total Threads: ${totalThreads}`)
