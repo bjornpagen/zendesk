@@ -94,7 +94,7 @@ const problemCategories = inngest.createFunction(
 )
 
 const classifyThread = inngest.createFunction(
-	{ id: "problems-classify-thread", concurrency: 1 },
+	{ id: "problems-classify-thread" },
 	{ event: "problems/classify-thread" },
 	async ({ event, step }) => {
 		const { threadId, currentProblemId } = event.data
@@ -156,7 +156,7 @@ const classifyThread = inngest.createFunction(
 )
 
 const reclassifyAll = inngest.createFunction(
-	{ id: "problems-reclassify-all", concurrency: 1 },
+	{ id: "problems-reclassify-all" },
 	{ event: "problems/reclassify-all" },
 	async ({ step }) => {
 		const threads = await step.run("fetch-threads", () =>
