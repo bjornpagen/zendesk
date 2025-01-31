@@ -24,15 +24,6 @@ interface Message {
 	type: string
 }
 
-interface Thread {
-	id: string
-	subject: string
-	messages: Message[]
-	customer: {
-		name: string
-	}
-}
-
 export function Widget() {
 	const [isOpen, setIsOpen] = useState(false)
 	const [message, setMessage] = useState("")
@@ -137,49 +128,77 @@ export function Widget() {
 						<>
 							<ScrollArea className="flex-1 p-4">
 								<div className="space-y-4 flex flex-col-reverse">
-									{activeThreadData?.messages.map((msg, index) => (
-										<div
-											key={msg.id}
-											className={`flex gap-3 ${
-												isUserMessage(msg.type) ? "flex-row-reverse" : ""
-											} ${
-												index > 0 &&
-												isUserMessage(msg.type) ===
-													isUserMessage(
-														// biome-ignore lint/style/noNonNullAssertion: We know the previous message exists since index > 0
-														activeThreadData.messages[index - 1]!.type
-													)
-													? "mt-2"
-													: "mt-4"
-											}`}
-										>
-											<Avatar className="h-8 w-8">
-												<AvatarImage
-													src={
-														isUserMessage(msg.type)
-															? "/placeholder.svg"
-															: "/agent-placeholder.svg"
-													}
-												/>
-												<AvatarFallback>
-													{isUserMessage(msg.type) ? "U" : "A"}
-												</AvatarFallback>
-											</Avatar>
-											<div
-												className={`rounded-lg p-3 max-w-[80%] ${
-													isUserMessage(msg.type)
-														? "bg-primary text-primary-foreground"
-														: "bg-muted"
-												}`}
-											>
-												<p className="text-sm">{msg.content}</p>
-												<p className="text-xs opacity-70 mt-1">
-													{formatDate(msg.createdAt)}
-													{msg.type === "ai" && " · AI"}
-												</p>
-											</div>
-										</div>
-									))}
+									{activeThreadData?.messages.map((msg, index) => {
+										const nextMessage = activeThreadData.messages[index - 1]
+										const isFirstAiMessage =
+											msg.type === "ai" &&
+											!activeThreadData.messages
+												.slice(0, index)
+												.some((m) => m.type === "ai")
+										const showEscalationBeforeThis =
+											isFirstAiMessage &&
+											activeThreadData.assignedTo &&
+											activeThreadData.assignedAt
+
+										return (
+											<>
+												{showEscalationBeforeThis &&
+													activeThreadData.assignedTo &&
+													activeThreadData.assignedAt && (
+														<div className="relative py-4">
+															<div className="absolute inset-0 flex items-center">
+																<div className="w-full border-t border-muted-foreground/20" />
+															</div>
+															<div className="relative flex justify-center">
+																<div className="bg-background px-2 text-xs text-muted-foreground">
+																	Escalated to{" "}
+																	{activeThreadData.assignedTo.name} on{" "}
+																	{formatDate(activeThreadData.assignedAt)}
+																</div>
+															</div>
+														</div>
+													)}
+												<div
+													key={msg.id}
+													className={`flex gap-3 ${
+														isUserMessage(msg.type) ? "flex-row-reverse" : ""
+													} ${
+														index > 0 &&
+														isUserMessage(msg.type) ===
+															isUserMessage(nextMessage?.type ?? "")
+															? "mt-2"
+															: "mt-4"
+													}`}
+												>
+													<Avatar className="h-8 w-8">
+														<AvatarImage
+															src={
+																isUserMessage(msg.type)
+																	? "/placeholder.svg"
+																	: "/agent-placeholder.svg"
+															}
+														/>
+														<AvatarFallback>
+															{isUserMessage(msg.type) ? "U" : "A"}
+														</AvatarFallback>
+													</Avatar>
+													<div
+														className={`rounded-lg p-3 max-w-[80%] ${
+															isUserMessage(msg.type)
+																? "bg-primary text-primary-foreground"
+																: "bg-muted"
+														}`}
+													>
+														<p className="text-sm">{msg.content}</p>
+														<p className="text-xs opacity-70 mt-1">
+															{formatDate(msg.createdAt)}
+															{msg.type === "ai" && " · AI"}
+														</p>
+													</div>
+												</div>
+											</>
+										)
+									})}
 								</div>
 							</ScrollArea>
 

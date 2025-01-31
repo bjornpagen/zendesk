@@ -222,6 +222,10 @@ export const threadsRelations = relations(threads, ({ many, one }) => ({
 	problem: one(problems, {
 		fields: [threads.problemId],
 		references: [problems.id]
+	}),
+	assignedTo: one(users, {
+		fields: [threads.assignedToClerkId],
+		references: [users.clerkId]
 	})
 }))
 

@@ -43,6 +43,11 @@ export async function getWidgetThread(threadId: string) {
 				columns: {
 					name: true
 				}
+			},
+			assignedTo: {
+				columns: {
+					name: true
+				}
 			}
 		},
 		columns: {
@@ -51,7 +56,8 @@ export async function getWidgetThread(threadId: string) {
 			createdAt: true,
 			updatedAt: true,
 			problemId: true,
-			assignedToClerkId: true
+			assignedToClerkId: true,
+			assignedAt: true
 		}
 	})
 
@@ -123,13 +129,20 @@ export async function getWidgetThreads() {
 				columns: {
 					name: true
 				}
+			},
+			assignedTo: {
+				columns: {
+					name: true
+				}
 			}
 		},
 		columns: {
 			id: true,
 			subject: true,
 			createdAt: true,
-			updatedAt: true
+			updatedAt: true,
+			assignedToClerkId: true,
+			assignedAt: true
 		},
 		orderBy: [desc(schema.threads.updatedAt)]
 	})
