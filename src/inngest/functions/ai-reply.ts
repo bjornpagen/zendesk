@@ -11,7 +11,7 @@ import { problemCategories } from "./problem-categories"
 // Define the expected response from our LLM for the AI autoreply
 const AiReplySchema = z.object({
 	action: z.enum(["reply", "escalate"]),
-	message: z.string()
+	messages: z.array(z.string())
 })
 
 const aiReplyFunction = inngest.createFunction(
@@ -242,11 +242,19 @@ const aiReplyFunction = inngest.createFunction(
 				{
 					role: "system",
 					content:
-						"You are a helpful customer support assistant. Analyze the customer's history and similar resolved tickets in the category to provide accurate, friendly support. Pay close attention to how other successful tickets were resolved and mirror that approach.\n\n" +
-						"Escalate to a human agent only if:\n" +
+						"You are a helpful customer support assistant. Analyze the customer's history and similar resolved tickets in the category to provide accurate, friendly support. Study how staff members have responded to similar tickets and mirror their tone and approach.\n\n" +
+						"Your responses must be in natural, conversational language - as if you're chatting in a messaging widget. Do not use any formatting, signatures, greetings, or formal structures. Write in a friendly, direct way that flows naturally in a chat.\n\n" +
+						"IMPORTANT PRIORITY HANDLING:\n" +
+						"- If a thread is marked as 'urgent', treat it with highest priority and emphasize quick resolution\n" +
+						"- Study and match the urgency level in staff responses to similar priority tickets\n" +
+						"- Mirror the increased engagement and attention that staff members show in urgent cases\n\n" +
+						"Escalate to a human agent if:\n" +
 						"- The customer explicitly asks for a human\n" +
-						"- They're still having issues after receiving initial help\n\n" +
-						"Otherwise, provide a complete and helpful response. Always maintain a professional, friendly tone."
+						"- The thread is marked as 'urgent' and requires immediate human intervention\n" +
+						"- They're still having issues after receiving initial help\n" +
+						"- The issue appears complex or high-risk based on similar staff-handled tickets\n\n" +
+						"When escalating to a human agent, set clear expectations about response times. Explain that you've assigned their ticket to a human agent who will review and respond within the next business day (or appropriate timeframe based on priority).\n\n" +
+						"Otherwise, provide a complete and helpful response while maintaining a casual, friendly tone that fits naturally in a chat conversation, closely matching how staff members communicate in similar situations."
 				},
 				{
 					role: "user",
@@ -268,14 +276,16 @@ const aiReplyFunction = inngest.createFunction(
 		// 6. Handle the decision - using early returns
 		if (aiResult.action === "escalate") {
 			console.log("Escalating thread")
-			const [aiMessage] = await step.run("insert-ai-message", () =>
+			const aiMessages = await step.run("insert-ai-messages", () =>
 				db
 					.insert(schema.messages)
-					.values({
-						type: "ai",
-						content: aiResult.message,
-						threadId: threadId
-					})
+					.values(
+						aiResult.messages.map((content) => ({
+							type: "ai" as const,
+							content,
+							threadId: threadId
+						}))
+					)
 					.returning({
 						id: schema.messages.id,
 						content: schema.messages.content,
@@ -283,25 +293,27 @@ const aiReplyFunction = inngest.createFunction(
 						type: schema.messages.type
 					})
 			)
-			console.log("AI message inserted:", aiMessage)
+			console.log("AI messages inserted:", aiMessages)
 
 			const assignedToClerkId = await step.run("escalate-thread", async () => {
 				return await roundRobinAssignThread(threadId)
 			})
 			console.log("Thread escalated to:", assignedToClerkId)
-			return { escalatedTo: assignedToClerkId, aiMessage }
+			return { escalatedTo: assignedToClerkId, aiMessages }
 		}
 
 		// Handle AI reply case
 		console.log("Handling AI reply")
-		const [aiMessage] = await step.run("insert-ai-message", () =>
+		const aiMessages = await step.run("insert-ai-messages", () =>
 			db
 				.insert(schema.messages)
-				.values({
-					type: "ai",
-					content: aiResult.message,
-					threadId: threadId
-				})
+				.values(
+					aiResult.messages.map((content) => ({
+						type: "ai" as const,
+						content,
+						threadId: threadId
+					}))
+				)
 				.returning({
 					id: schema.messages.id,
 					content: schema.messages.content,
@@ -309,8 +321,8 @@ const aiReplyFunction = inngest.createFunction(
 					type: schema.messages.type
 				})
 		)
-		console.log("AI message inserted:", aiMessage)
-		return { aiMessage }
+		console.log("AI messages inserted:", aiMessages)
+		return { aiMessages }
 	}
 )
 

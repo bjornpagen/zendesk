@@ -5,7 +5,7 @@ import {
 	classifyThread
 } from "./problem-categories"
 
-export const functions = [
+export default [
 	aiReplyFunction,
 	problemCategories,
 	reclassifyAll,

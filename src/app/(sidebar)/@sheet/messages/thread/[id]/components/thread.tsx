@@ -68,6 +68,36 @@ const capitalizeFirstLetter = (string: string) => {
 	return string.charAt(0).toUpperCase() + string.slice(1)
 }
 
+const getAvatarFallback = (message: {
+	type: string
+	user: { name: string; avatar: string } | null
+	customer: { name: string } | null
+}) => {
+	switch (message.type) {
+		case "staff":
+			return message.user?.name?.[0] || "A"
+		case "ai":
+			return "AI"
+		default:
+			return message.customer?.name?.[0] || "C"
+	}
+}
+
+const getDisplayName = (message: {
+	type: string
+	user: { name: string } | null
+	customer: { name: string } | null
+}) => {
+	switch (message.type) {
+		case "staff":
+			return message.user?.name || "Support Agent"
+		case "ai":
+			return "AI Assistant"
+		default:
+			return message.customer?.name || "Customer"
+	}
+}
+
 export default function Thread() {
 	const params = useParams()
 	const router = useRouter()
@@ -542,16 +572,12 @@ export default function Thread() {
 											}
 										/>
 										<AvatarFallback>
-											{message.type === "staff"
-												? message.user?.name?.charAt(0) || "A"
-												: message.customer?.name?.charAt(0) || "C"}
+											{getAvatarFallback(message)}
 										</AvatarFallback>
 									</Avatar>
 									<div className="flex flex-col">
 										<p className="text-sm font-medium">
-											{message.type === "staff"
-												? message.user?.name || "Support Agent"
-												: message.customer?.name || "Customer"}
+											{getDisplayName(message)}
 										</p>
 										<p className="text-xs text-muted-foreground mb-1">
 											{formatDate(message.createdAt)}

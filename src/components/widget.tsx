@@ -15,6 +15,7 @@ import {
 	sendWidgetMessage,
 	createWidgetThread
 } from "@/server/actions/widget"
+import { useMessageSubscription } from "@/hooks/use-message-subscription"
 
 interface Message {
 	id: string
@@ -46,6 +47,21 @@ export function Widget() {
 		activeThread ? ["widget-thread", activeThread] : null,
 		([_, id]) => getWidgetThread(id)
 	)
+
+	useMessageSubscription(activeThread || "", async () => {
+		await mutateActiveThread()
+		await mutateThreads()
+
+		const scrollArea = document.querySelector(".scroll-area-viewport")
+		if (scrollArea) {
+			setTimeout(() => {
+				scrollArea.scrollTo({
+					top: scrollArea.scrollHeight,
+					behavior: "smooth"
+				})
+			}, 100)
+		}
+	})
 
 	const handleSend = async () => {
 		if (!message.trim() || !activeThread) {
@@ -159,6 +175,7 @@ export function Widget() {
 												<p className="text-sm">{msg.content}</p>
 												<p className="text-xs opacity-70 mt-1">
 													{formatDate(msg.createdAt)}
+													{msg.type === "ai" && " · AI"}
 												</p>
 											</div>
 										</div>
