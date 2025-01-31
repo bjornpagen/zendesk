@@ -10,7 +10,7 @@ import { eq, isNull } from "drizzle-orm"
  * Otherwise, assigns among all users.
  * Uses a transaction to ensure thread assignments are atomic and prevent race conditions.
  */
-async function roundRobinAssignThread(threadId: string) {
+export async function roundRobinAssignThread(threadId: string) {
 	console.log("Starting roundRobinAssignThread for threadId:", threadId)
 
 	return await db.transaction(async (tx) => {

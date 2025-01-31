@@ -94,13 +94,10 @@ export async function sendWidgetMessage(content: string, threadId: string) {
 		.set({ lastReadAt: new Date() })
 		.where(eq(schema.threads.id, thread.id))
 
-	// Only classify if the thread doesn't have a problem assigned
-	if (!thread.problemId) {
-		await inngest.send({
-			name: "problems/autotag",
-			data: { threadId: thread.id }
-		})
-	}
+	await inngest.send({
+		name: "thread/ai-reply",
+		data: { threadId: thread.id }
+	})
 
 	return newMessage
 }

@@ -164,20 +164,9 @@ export async function POST(request: NextRequest) {
 				return { customer, threadId, problemId, message }
 			})
 
-			// After the transaction completes, classify the problem only if needed
-			if (!result.problemId) {
-				await inngest.send({
-					name: "problems/autotag",
-					data: { threadId: result.threadId }
-				})
-			}
-
-			// After classification, assign to a user if not already assigned
-			const thread = await db.query.threads.findFirst({
-				where: eq(schema.threads.id, result.threadId),
-				columns: {
-					assignedToClerkId: true
-				}
+			await inngest.send({
+				name: "thread/ai-reply",
+				data: { threadId: result.threadId }
 			})
 
 			console.log("🎉 Successfully processed email:", {
@@ -282,20 +271,9 @@ export async function POST(request: NextRequest) {
 			return { customer, threadId, problemId, message }
 		})
 
-		// After the transaction completes, classify the problem only if needed
-		if (!result.problemId) {
-			await inngest.send({
-				name: "problems/autotag",
-				data: { threadId: result.threadId }
-			})
-		}
-
-		// After classification, assign to a user if not already assigned
-		const thread = await db.query.threads.findFirst({
-			where: eq(schema.threads.id, result.threadId),
-			columns: {
-				assignedToClerkId: true
-			}
+		await inngest.send({
+			name: "thread/ai-reply",
+			data: { threadId: result.threadId }
 		})
 
 		console.log("🎉 Successfully processed email:", {

@@ -16,6 +16,11 @@ const events = {
 			threadId: z.string(),
 			currentProblemId: z.string().nullable()
 		})
+	},
+	"thread/ai-reply": {
+		data: z.object({
+			threadId: z.string()
+		})
 	}
 }
 

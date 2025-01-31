@@ -15,10 +15,10 @@ import { relations } from "drizzle-orm"
 export const createTable = pgTableCreator((name) => `zendesk_${name}`)
 
 const timestamps = {
-	createdAt: timestamp("created_at")
+	createdAt: timestamp("created_at", { mode: "date" })
 		.notNull()
 		.$default(() => new Date()),
-	updatedAt: timestamp("updated_at")
+	updatedAt: timestamp("updated_at", { mode: "date" })
 		.notNull()
 		.$default(() => new Date())
 		.$onUpdate(() => new Date())
@@ -80,7 +80,7 @@ export const messages = createTable(
 	"message",
 	{
 		id: char("id", { length: 24 }).primaryKey().notNull().$default(createId),
-		type: text("type").notNull().$type<"email" | "widget" | "staff">(),
+		type: text("type").notNull().$type<"email" | "widget" | "staff" | "ai">(),
 		...timestamps,
 		customerId: char("customer_id", { length: 24 }).references(
 			() => customers.id
@@ -96,23 +96,27 @@ export const messages = createTable(
 	(table) => ({
 		staffCheck: check(
 			"check_staff_constraint",
-			sql`${table.type} = 'staff' AND ${table.userClerkId} IS NOT NULL AND ${table.customerId} IS NULL`
+			sql`${table.type} <> 'staff' OR (${table.userClerkId} IS NOT NULL AND ${table.customerId} IS NULL)`
 		),
-		notStaffCheck: check(
-			"check_not_staff_constraint",
-			sql`${table.type} != 'staff' AND ${table.userClerkId} IS NULL AND ${table.customerId} IS NOT NULL`
+		aiCheck: check(
+			"check_ai_constraint",
+			sql`${table.type} <> 'ai' OR (${table.userClerkId} IS NULL AND ${table.customerId} IS NULL AND ${table.messageId} IS NULL)`
+		),
+		notStaffOrAiCheck: check(
+			"check_not_staff_or_ai_constraint",
+			sql`${table.type} IN ('staff', 'ai') OR (${table.userClerkId} IS NULL AND ${table.customerId} IS NOT NULL)`
 		),
 		customerMatchCheck: check(
 			"check_customer_match_constraint",
-			sql`(${table.type} = 'staff') OR (${table.customerId} = (SELECT ${threads.customerId} FROM ${threads} WHERE id = ${table.threadId}))`
+			sql`${table.type} IN ('staff', 'ai') OR (${table.customerId} = (SELECT ${threads.customerId} FROM ${threads} WHERE id = ${table.threadId}))`
 		),
 		emailCheck: check(
 			"check_email_constraint",
-			sql`${table.type} = 'email' AND ${table.messageId} IS NOT NULL AND ${table.userClerkId} IS NULL`
+			sql`${table.type} <> 'email' OR (${table.messageId} IS NOT NULL AND ${table.userClerkId} IS NULL)`
 		),
 		widgetCheck: check(
 			"check_widget_constraint",
-			sql`${table.type} = 'widget' AND ${table.messageId} IS NULL AND ${table.userClerkId} IS NULL`
+			sql`${table.type} <> 'widget' OR (${table.messageId} IS NULL AND ${table.userClerkId} IS NULL)`
 		),
 		threadIdIndex: index("messages_thread_id_idx").on(table.threadId),
 		customerIdIndex: index("messages_customer_id_idx").on(table.customerId),

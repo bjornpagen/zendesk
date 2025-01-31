@@ -299,4 +299,4 @@ ${thread.messages.map((m) => `[${m.type}] ${m.content}`).join("\n\n")}`
 	return inserted
 }
 
-export default [problemCategories, reclassifyAll, classifyThread]
+export { problemCategories, reclassifyAll, classifyThread }

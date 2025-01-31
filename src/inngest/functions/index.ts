@@ -1,3 +1,13 @@
-import problemCategories from "./problem-categories"
+import { aiReplyFunction } from "./ai-reply"
+import {
+	problemCategories,
+	reclassifyAll,
+	classifyThread
+} from "./problem-categories"
 
-export default [...problemCategories]
+export const functions = [
+	aiReplyFunction,
+	problemCategories,
+	reclassifyAll,
+	classifyThread
+]
