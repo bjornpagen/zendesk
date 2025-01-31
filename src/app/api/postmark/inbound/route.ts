@@ -3,7 +3,6 @@ import type { PostmarkWebhookPayload } from "@/types/postmark-webhook"
 import { db } from "@/server/db"
 import * as schema from "@/server/db/schema"
 import { uploadToS3 } from "@/server/s3"
-import { roundRobinAssignThread } from "@/server/actions/roundRobin"
 import { eq } from "drizzle-orm"
 import { inngest } from "@/inngest/client"
 
@@ -181,14 +180,6 @@ export async function POST(request: NextRequest) {
 				}
 			})
 
-			if (thread && !thread.assignedToClerkId) {
-				async function delayedRoundRobinAssign() {
-					await new Promise((resolve) => setTimeout(resolve, 30000))
-					await roundRobinAssignThread(result.threadId)
-				}
-				delayedRoundRobinAssign().catch(console.error)
-			}
-
 			console.log("🎉 Successfully processed email:", {
 				customerId: result.customer.id,
 				threadId: result.threadId,
@@ -306,14 +297,6 @@ export async function POST(request: NextRequest) {
 				assignedToClerkId: true
 			}
 		})
-
-		if (thread && !thread.assignedToClerkId) {
-			async function delayedRoundRobinAssign() {
-				await new Promise((resolve) => setTimeout(resolve, 30000))
-				await roundRobinAssignThread(result.threadId)
-			}
-			delayedRoundRobinAssign().catch(console.error)
-		}
 
 		console.log("🎉 Successfully processed email:", {
 			customerId: result.customer.id,

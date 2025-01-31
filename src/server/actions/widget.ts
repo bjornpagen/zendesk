@@ -3,7 +3,6 @@
 import { db } from "@/server/db"
 import * as schema from "@/server/db/schema"
 import { eq, asc, desc } from "drizzle-orm"
-import { roundRobinAssignThread } from "./roundRobin"
 import { inngest } from "@/inngest/client"
 
 /**
@@ -101,14 +100,6 @@ export async function sendWidgetMessage(content: string, threadId: string) {
 			name: "problems/autotag",
 			data: { threadId: thread.id }
 		})
-	}
-
-	if (!thread.assignedToClerkId) {
-		async function delayedRoundRobinAssign() {
-			await new Promise((resolve) => setTimeout(resolve, 30000))
-			await roundRobinAssignThread(thread.id)
-		}
-		delayedRoundRobinAssign().catch(console.error)
 	}
 
 	return newMessage
