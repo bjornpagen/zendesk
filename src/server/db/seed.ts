@@ -114,12 +114,10 @@ async function main() {
 		subject: template.subject,
 		status: "open" as const,
 		priority: faker.helpers.arrayElement(["urgent", "non-urgent"] as const),
-		assignedToClerkId: faker.datatype.boolean(0.8)
-			? randomItem(createdUsers).clerkId
-			: null,
+		assignedToClerkId: null,
 		problemId: null,
 		statusChangedAt: faker.date.recent({ days: 90 }),
-		assignedAt: faker.date.recent({ days: 90 }),
+		assignedAt: null,
 		_templateIndex: templateIndex // This won't be inserted since it's not in the schema
 	}))
 
