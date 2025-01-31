@@ -36,6 +36,7 @@ async function main() {
 	await db.delete(schema.problems)
 	await db.delete(schema.customers)
 	await db.delete(schema.users)
+	await db.delete(schema.roundRobinState)
 	await db.delete(schema.teams)
 
 	console.log("Creating default team...")
